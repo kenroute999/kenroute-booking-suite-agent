@@ -35,6 +35,8 @@ const stats = [
   { label: "Commission Earned", value: "₹4,230", delta: "+9.1%", icon: IndianRupee, tint: "bg-amber-500/10 text-amber-600" },
   { label: "Total Passengers", value: "56", delta: "+5", icon: Users, tint: "bg-pink-500/10 text-pink-600" },
   { label: "Wallet Balance", value: "₹12,450", delta: "Available", icon: Wallet, tint: "bg-violet-500/10 text-violet-600" },
+];
+
 const quickActions: { label: string; to: string; icon: typeof TicketPlus; primary?: boolean }[] = [
   { label: "New Booking", to: "/new-booking", icon: TicketPlus, primary: true },
   { label: "Reprint Ticket", to: "/tickets", icon: Printer },
@@ -42,8 +44,6 @@ const quickActions: { label: string; to: string; icon: typeof TicketPlus; primar
   { label: "Booking History", to: "/booking-history", icon: History },
 ];
 
-  { label: "Booking History", to: "/booking-history", icon: History },
-] as const;
 
 const recentBookings = [
   { id: "KR10421", name: "Ramesh Kumar", route: "HYD → BLR", seat: "L-12", amount: "₹1,250", status: "Confirmed" },
