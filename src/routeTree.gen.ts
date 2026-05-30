@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NewBookingRouteImport } from './routes/new-booking'
+import { Route as BookingHistoryRouteImport } from './routes/booking-history'
 import { Route as IndexRouteImport } from './routes/index'
 
 const NewBookingRoute = NewBookingRouteImport.update({
   id: '/new-booking',
   path: '/new-booking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingHistoryRoute = BookingHistoryRouteImport.update({
+  id: '/booking-history',
+  path: '/booking-history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/new-booking'
+  fullPaths: '/' | '/booking-history' | '/new-booking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/new-booking'
-  id: '__root__' | '/' | '/new-booking'
+  to: '/' | '/booking-history' | '/new-booking'
+  id: '__root__' | '/' | '/booking-history' | '/new-booking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookingHistoryRoute: typeof BookingHistoryRoute
   NewBookingRoute: typeof NewBookingRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/new-booking'
       fullPath: '/new-booking'
       preLoaderRoute: typeof NewBookingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking-history': {
+      id: '/booking-history'
+      path: '/booking-history'
+      fullPath: '/booking-history'
+      preLoaderRoute: typeof BookingHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookingHistoryRoute: BookingHistoryRoute,
   NewBookingRoute: NewBookingRoute,
 }
 export const routeTree = rootRouteImport
