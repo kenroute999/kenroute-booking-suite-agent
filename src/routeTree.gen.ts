@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TicketsRouteImport } from './routes/tickets'
 import { Route as NewBookingRouteImport } from './routes/new-booking'
 import { Route as BookingHistoryRouteImport } from './routes/booking-history'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TicketsRoute = TicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewBookingRoute = NewBookingRouteImport.update({
   id: '/new-booking',
   path: '/new-booking',
@@ -33,34 +39,45 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
+  '/tickets': typeof TicketsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
+  '/tickets': typeof TicketsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
+  '/tickets': typeof TicketsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/booking-history' | '/new-booking'
+  fullPaths: '/' | '/booking-history' | '/new-booking' | '/tickets'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/booking-history' | '/new-booking'
-  id: '__root__' | '/' | '/booking-history' | '/new-booking'
+  to: '/' | '/booking-history' | '/new-booking' | '/tickets'
+  id: '__root__' | '/' | '/booking-history' | '/new-booking' | '/tickets'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BookingHistoryRoute: typeof BookingHistoryRoute
   NewBookingRoute: typeof NewBookingRoute
+  TicketsRoute: typeof TicketsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tickets': {
+      id: '/tickets'
+      path: '/tickets'
+      fullPath: '/tickets'
+      preLoaderRoute: typeof TicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new-booking': {
       id: '/new-booking'
       path: '/new-booking'
@@ -89,7 +106,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BookingHistoryRoute: BookingHistoryRoute,
   NewBookingRoute: NewBookingRoute,
+  TicketsRoute: TicketsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
