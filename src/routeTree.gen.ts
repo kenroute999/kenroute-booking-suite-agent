@@ -9,14 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TicketsRouteImport } from './routes/tickets'
+import { Route as PassengersRouteImport } from './routes/passengers'
 import { Route as NewBookingRouteImport } from './routes/new-booking'
 import { Route as BookingHistoryRouteImport } from './routes/booking-history'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TicketsRoute = TicketsRouteImport.update({
   id: '/tickets',
   path: '/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PassengersRoute = PassengersRouteImport.update({
+  id: '/passengers',
+  path: '/passengers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewBookingRoute = NewBookingRouteImport.update({
@@ -39,43 +51,84 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
+  '/passengers': typeof PassengersRoute
   '/tickets': typeof TicketsRoute
+  '/wallet': typeof WalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
+  '/passengers': typeof PassengersRoute
   '/tickets': typeof TicketsRoute
+  '/wallet': typeof WalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/booking-history': typeof BookingHistoryRoute
   '/new-booking': typeof NewBookingRoute
+  '/passengers': typeof PassengersRoute
   '/tickets': typeof TicketsRoute
+  '/wallet': typeof WalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/booking-history' | '/new-booking' | '/tickets'
+  fullPaths:
+    | '/'
+    | '/booking-history'
+    | '/new-booking'
+    | '/passengers'
+    | '/tickets'
+    | '/wallet'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/booking-history' | '/new-booking' | '/tickets'
-  id: '__root__' | '/' | '/booking-history' | '/new-booking' | '/tickets'
+  to:
+    | '/'
+    | '/booking-history'
+    | '/new-booking'
+    | '/passengers'
+    | '/tickets'
+    | '/wallet'
+  id:
+    | '__root__'
+    | '/'
+    | '/booking-history'
+    | '/new-booking'
+    | '/passengers'
+    | '/tickets'
+    | '/wallet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BookingHistoryRoute: typeof BookingHistoryRoute
   NewBookingRoute: typeof NewBookingRoute
+  PassengersRoute: typeof PassengersRoute
   TicketsRoute: typeof TicketsRoute
+  WalletRoute: typeof WalletRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tickets': {
       id: '/tickets'
       path: '/tickets'
       fullPath: '/tickets'
       preLoaderRoute: typeof TicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passengers': {
+      id: '/passengers'
+      path: '/passengers'
+      fullPath: '/passengers'
+      preLoaderRoute: typeof PassengersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/new-booking': {
@@ -106,7 +159,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BookingHistoryRoute: BookingHistoryRoute,
   NewBookingRoute: NewBookingRoute,
+  PassengersRoute: PassengersRoute,
   TicketsRoute: TicketsRoute,
+  WalletRoute: WalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
