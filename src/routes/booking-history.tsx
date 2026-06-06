@@ -158,6 +158,7 @@ function BookingHistoryPage() {
   const [date, setDate] = useState("");
   const [bookingStatus, setBookingStatus] = useState<"All" | BookingStatus>("All");
   const [paymentStatus, setPaymentStatus] = useState<"All" | PaymentStatus>("All");
+  const [sourceFilter, setSourceFilter] = useState<"All" | BookingSource>("All");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Booking | null>(null);
 
