@@ -455,7 +455,7 @@ function PassengersPage() {
                 ))}
                 {pageRows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       No passengers found matching your search.
                     </td>
                   </tr>
