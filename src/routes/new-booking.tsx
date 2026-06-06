@@ -405,6 +405,13 @@ function NewBooking() {
 
         {/* RIGHT */}
         <aside className="space-y-5">
+          <BookingValidationPanel
+            routeOk
+            seatsOk={seatCount > 0}
+            fareOk={seatCount > 0}
+            ticketReady={seatCount > 0}
+          />
+
           <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
             <h3 className="mb-3 text-sm font-semibold">Booking Summary</h3>
             <SummaryRow label="Total Seats" value={totalSeats} />
