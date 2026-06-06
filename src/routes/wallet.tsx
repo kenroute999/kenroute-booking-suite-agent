@@ -16,6 +16,14 @@ import {
   Download,
   IndianRupee,
 } from "lucide-react";
+import { SourceBarComparison, type SourceStat } from "@/components/booking-source";
+
+const WALLET_SOURCE_STATS: SourceStat[] = [
+  { source: "Agent", count: 142, revenue: 48200 },
+  { source: "Counter", count: 86, revenue: 31400 },
+  { source: "Phone", count: 47, revenue: 18900 },
+  { source: "Corporate", count: 23, revenue: 9920 },
+];
 
 export const Route = createFileRoute("/wallet")({
   component: WalletPage,
