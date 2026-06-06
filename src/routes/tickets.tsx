@@ -160,6 +160,7 @@ function TicketsPage() {
   const [query, setQuery] = useState("");
   const [searchField, setSearchField] = useState<"all" | "pnr" | "ticket" | "mobile" | "name">("all");
   const [status, setStatus] = useState<"All" | TicketStatus>("All");
+  const [sourceFilter, setSourceFilter] = useState<"All" | BookingSource>("All");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<TicketRow | null>(null);
   const [reprintQuery, setReprintQuery] = useState("");
