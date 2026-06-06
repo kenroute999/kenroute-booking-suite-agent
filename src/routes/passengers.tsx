@@ -20,6 +20,7 @@ import {
   ChevronRight,
   TrendingUp,
 } from "lucide-react";
+import { SourceBadge, sourceFor } from "@/components/booking-source";
 
 export const Route = createFileRoute("/passengers")({
   component: PassengersPage,
