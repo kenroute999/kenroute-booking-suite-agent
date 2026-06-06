@@ -25,6 +25,14 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import {
+  SourceBadge,
+  SourceBarComparison,
+  sourceFor,
+  BOOKING_SOURCES,
+  type BookingSource,
+  type SourceStat,
+} from "@/components/booking-source";
 
 export const Route = createFileRoute("/tickets")({
   component: TicketsPage,
