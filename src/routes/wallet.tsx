@@ -271,6 +271,24 @@ function WalletPage() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <SourceBarComparison
+            title="Commission Revenue by Source"
+            subtitle="Earnings split by booking channel"
+            stats={WALLET_SOURCE_STATS}
+          />
+          <SourceBarComparison
+            title="Bookings by Source"
+            subtitle="Volume comparison across channels"
+            metric="Bookings"
+            pick="count"
+            stats={WALLET_SOURCE_STATS}
+            formatter={(v) => String(v)}
+          />
+        </div>
+
+
+
         {/* Withdraw section */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
