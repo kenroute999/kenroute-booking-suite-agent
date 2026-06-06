@@ -415,6 +415,13 @@ function PassengersPage() {
                       <StatusPill status={p.status} />
                     </td>
                     <td className="px-5 py-3">
+                      {p.status === "VIP" ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200">VIP</span>
+                      ) : (
+                        <SourceBadge source={sourceFor(p.id) === "Corporate" ? "Corporate" : "Agent"} />
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setSelected(p)}
