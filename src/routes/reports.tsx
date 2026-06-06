@@ -13,6 +13,14 @@ import {
   FileSpreadsheet,
   TrendingUp,
 } from "lucide-react";
+import { SourceSummaryGrid, SourceBarComparison, type SourceStat } from "@/components/booking-source";
+
+const REPORT_SOURCE_STATS: SourceStat[] = [
+  { source: "Agent", count: 1124, revenue: 942000 },
+  { source: "Counter", count: 612, revenue: 528400 },
+  { source: "Phone", count: 298, revenue: 246800 },
+  { source: "Corporate", count: 150, revenue: 128000 },
+];
 
 export const Route = createFileRoute("/reports")({
   component: ReportsPage,
