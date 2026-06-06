@@ -165,6 +165,15 @@ function Dashboard() {
           </div>
         </section>
 
+        {/* Booking Source Analytics + Inventory Sync */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <SourceSummaryGrid stats={DASHBOARD_SOURCE_STATS} />
+            <SourcePieChart stats={DASHBOARD_SOURCE_STATS} />
+          </div>
+          <InventorySyncCard />
+        </div>
+
         {/* Main grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Recent Bookings */}
