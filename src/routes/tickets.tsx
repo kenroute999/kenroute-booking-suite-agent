@@ -414,7 +414,10 @@ function TicketsPage() {
                     >
                       {t.ticketNo}
                     </button>
-                    <div className="mt-0.5 text-[10px] text-muted-foreground">Issued {t.issuedAt}</div>
+                    <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span>Issued {t.issuedAt}</span>
+                      <SourceBadge source={sourceFor(t.ticketNo)} />
+                    </div>
                   </td>
                   <td className="px-3 py-3 font-mono text-[12px] font-semibold text-foreground">{t.pnr}</td>
                   <td className="px-3 py-3">
