@@ -386,7 +386,7 @@ function BookingHistoryPage() {
               ))}
               {paged.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="px-5 py-16 text-center text-sm text-muted-foreground">
+                  <td colSpan={12} className="px-5 py-16 text-center text-sm text-muted-foreground">
                     No bookings match the current filters.
                   </td>
                 </tr>
