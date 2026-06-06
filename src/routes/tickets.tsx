@@ -292,6 +292,14 @@ function TicketsPage() {
               <option value="Cancelled">Cancelled</option>
               <option value="Reprinted">Reprinted</option>
             </select>
+            <select
+              value={sourceFilter}
+              onChange={(e) => { setSourceFilter(e.target.value as typeof sourceFilter); setPage(1); }}
+              className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-brand-green/40"
+            >
+              <option value="All">All Sources</option>
+              {BOOKING_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
           </div>
         </div>
 
