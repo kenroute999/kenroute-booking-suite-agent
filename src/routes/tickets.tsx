@@ -521,6 +521,24 @@ function TicketsPage() {
         </div>
       </div>
 
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <SourceBarComparison
+          title="Tickets by Source"
+          subtitle="Total tickets issued per channel"
+          metric="Tickets"
+          pick="count"
+          stats={sourceStats}
+          formatter={(v) => String(v)}
+        />
+        <SourceBarComparison
+          title="Revenue by Source"
+          subtitle="Ticket fare grouped by channel"
+          stats={sourceStats}
+        />
+      </div>
+
+
+
       {selected && <TicketDrawer ticket={selected} onClose={() => setSelected(null)} />}
     </AgentShell>
   );
