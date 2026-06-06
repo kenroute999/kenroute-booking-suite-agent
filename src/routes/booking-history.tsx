@@ -24,6 +24,14 @@ import {
   CreditCard,
   MoreHorizontal,
 } from "lucide-react";
+import {
+  SourceBadge,
+  SourceBarComparison,
+  sourceFor,
+  BOOKING_SOURCES,
+  type BookingSource,
+  type SourceStat,
+} from "@/components/booking-source";
 
 export const Route = createFileRoute("/booking-history")({
   component: BookingHistoryPage,
