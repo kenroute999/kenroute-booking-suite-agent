@@ -177,6 +177,9 @@ function NewBooking() {
       <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
         {/* LEFT + CENTER */}
         <div className="space-y-5">
+          <InventoryStatusBanner />
+          {showConflict && <SeatConflictBanner onDismiss={() => setShowConflict(false)} />}
+          <BookingSourceSelector value={bookingSource} onChange={setBookingSource} />
           {/* Journey info */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-7">
