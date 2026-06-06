@@ -180,7 +180,7 @@ function BookingHistoryPage() {
       };
       return fields[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, route, date, bookingStatus, paymentStatus]);
+  }, [query, searchField, route, date, bookingStatus, paymentStatus, sourceFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -191,6 +191,17 @@ function BookingHistoryPage() {
     const cancelled = BOOKINGS.filter((b) => b.status === "Cancelled").length;
     const revenue = BOOKINGS.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0);
     return { total: BOOKINGS.length, confirmed, cancelled, revenue };
+  }, []);
+
+  const sourceStats: SourceStat[] = useMemo(() => {
+    return BOOKING_SOURCES.map((src) => {
+      const rows = BOOKINGS.filter((b) => sourceFor(b.id) === src);
+      return {
+        source: src,
+        count: rows.length,
+        revenue: rows.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0),
+      };
+    });
   }, []);
 
   return (
