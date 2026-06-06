@@ -24,6 +24,14 @@ import {
   CreditCard,
   MoreHorizontal,
 } from "lucide-react";
+import {
+  SourceBadge,
+  SourceBarComparison,
+  sourceFor,
+  BOOKING_SOURCES,
+  type BookingSource,
+  type SourceStat,
+} from "@/components/booking-source";
 
 export const Route = createFileRoute("/booking-history")({
   component: BookingHistoryPage,
@@ -150,6 +158,7 @@ function BookingHistoryPage() {
   const [date, setDate] = useState("");
   const [bookingStatus, setBookingStatus] = useState<"All" | BookingStatus>("All");
   const [paymentStatus, setPaymentStatus] = useState<"All" | PaymentStatus>("All");
+  const [sourceFilter, setSourceFilter] = useState<"All" | BookingSource>("All");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Booking | null>(null);
 
@@ -159,6 +168,7 @@ function BookingHistoryPage() {
       if (route !== "All Routes" && b.route !== route) return false;
       if (bookingStatus !== "All" && b.status !== bookingStatus) return false;
       if (paymentStatus !== "All" && b.payment !== paymentStatus) return false;
+      if (sourceFilter !== "All" && sourceFor(b.id) !== sourceFilter) return false;
       if (date && b.date !== date) return false;
       if (!q) return true;
       const fields: Record<typeof searchField, string> = {
@@ -170,7 +180,7 @@ function BookingHistoryPage() {
       };
       return fields[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, route, date, bookingStatus, paymentStatus]);
+  }, [query, searchField, route, date, bookingStatus, paymentStatus, sourceFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -181,6 +191,17 @@ function BookingHistoryPage() {
     const cancelled = BOOKINGS.filter((b) => b.status === "Cancelled").length;
     const revenue = BOOKINGS.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0);
     return { total: BOOKINGS.length, confirmed, cancelled, revenue };
+  }, []);
+
+  const sourceStats: SourceStat[] = useMemo(() => {
+    return BOOKING_SOURCES.map((src) => {
+      const rows = BOOKINGS.filter((b) => sourceFor(b.id) === src);
+      return {
+        source: src,
+        count: rows.length,
+        revenue: rows.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0),
+      };
+    });
   }, []);
 
   return (
@@ -244,12 +265,22 @@ function BookingHistoryPage() {
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-5">
           <FilterSelect label="Route" value={route} onChange={(v) => { setRoute(v); setPage(1); }} options={ROUTES} icon={<Filter className="h-3.5 w-3.5" />} />
           <FilterInput label="Journey Date" type="text" value={date} onChange={(v) => { setDate(v); setPage(1); }} placeholder="e.g. 30 May 2026" icon={<Calendar className="h-3.5 w-3.5" />} />
           <FilterSelect label="Booking Status" value={bookingStatus} onChange={(v) => { setBookingStatus(v as typeof bookingStatus); setPage(1); }} options={["All", "Confirmed", "Completed", "Cancelled", "Pending"]} icon={<TicketCheck className="h-3.5 w-3.5" />} />
           <FilterSelect label="Payment Status" value={paymentStatus} onChange={(v) => { setPaymentStatus(v as typeof paymentStatus); setPage(1); }} options={["All", "Paid", "Refunded", "Pending", "Failed"]} icon={<CreditCard className="h-3.5 w-3.5" />} />
+          <FilterSelect label="Booking Source" value={sourceFilter} onChange={(v) => { setSourceFilter(v as typeof sourceFilter); setPage(1); }} options={["All", ...BOOKING_SOURCES]} icon={<User className="h-3.5 w-3.5" />} />
         </div>
+      </div>
+
+      {/* Revenue by source */}
+      <div className="mb-6">
+        <SourceBarComparison
+          title="Revenue by Booking Source"
+          subtitle="Grouped from all bookings"
+          stats={sourceStats}
+        />
       </div>
 
       {/* Table */}
@@ -267,13 +298,14 @@ function BookingHistoryPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-sm">
+          <table className="w-full min-w-[1300px] text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
                 <th className="px-5 py-3 font-semibold">Booking ID</th>
                 <th className="px-3 py-3 font-semibold">Passenger</th>
                 <th className="px-3 py-3 font-semibold">Mobile</th>
                 <th className="px-3 py-3 font-semibold">Route</th>
+                <th className="px-3 py-3 font-semibold">Source</th>
                 <th className="px-3 py-3 font-semibold">Boarding</th>
                 <th className="px-3 py-3 font-semibold">Seat</th>
                 <th className="px-3 py-3 font-semibold">Journey</th>
@@ -314,6 +346,7 @@ function BookingHistoryPage() {
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">{b.mobile}</td>
                   <td className="px-3 py-3 font-medium text-foreground">{b.route}</td>
+                  <td className="px-3 py-3"><SourceBadge source={sourceFor(b.id)} /></td>
                   <td className="px-3 py-3 text-muted-foreground">{b.boarding}</td>
                   <td className="px-3 py-3">
                     <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-[12px] font-semibold text-foreground">
@@ -353,7 +386,7 @@ function BookingHistoryPage() {
               ))}
               {paged.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="px-5 py-16 text-center text-sm text-muted-foreground">
+                  <td colSpan={12} className="px-5 py-16 text-center text-sm text-muted-foreground">
                     No bookings match the current filters.
                   </td>
                 </tr>

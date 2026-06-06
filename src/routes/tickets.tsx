@@ -25,6 +25,14 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import {
+  SourceBadge,
+  SourceBarComparison,
+  sourceFor,
+  BOOKING_SOURCES,
+  type BookingSource,
+  type SourceStat,
+} from "@/components/booking-source";
 
 export const Route = createFileRoute("/tickets")({
   component: TicketsPage,
@@ -152,6 +160,7 @@ function TicketsPage() {
   const [query, setQuery] = useState("");
   const [searchField, setSearchField] = useState<"all" | "pnr" | "ticket" | "mobile" | "name">("all");
   const [status, setStatus] = useState<"All" | TicketStatus>("All");
+  const [sourceFilter, setSourceFilter] = useState<"All" | BookingSource>("All");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<TicketRow | null>(null);
   const [reprintQuery, setReprintQuery] = useState("");
@@ -161,6 +170,7 @@ function TicketsPage() {
     const q = query.trim().toLowerCase();
     return TICKETS.filter((t) => {
       if (status !== "All" && t.status !== status) return false;
+      if (sourceFilter !== "All" && sourceFor(t.ticketNo) !== sourceFilter) return false;
       if (!q) return true;
       const map = {
         all: `${t.ticketNo} ${t.pnr} ${t.passenger} ${t.mobile}`,
@@ -171,7 +181,7 @@ function TicketsPage() {
       } as const;
       return map[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, status]);
+  }, [query, searchField, status, sourceFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -184,6 +194,19 @@ function TicketsPage() {
     const reprinted = TICKETS.filter((t) => t.status === "Reprinted").length;
     return { active, today, cancelled, reprinted };
   }, []);
+
+  const sourceStats: SourceStat[] = useMemo(
+    () =>
+      BOOKING_SOURCES.map((src) => {
+        const rows = TICKETS.filter((t) => sourceFor(t.ticketNo) === src);
+        return {
+          source: src,
+          count: rows.length,
+          revenue: rows.reduce((s, t) => s + t.fare, 0),
+        };
+      }),
+    [],
+  );
 
   const reprintMatch = useMemo(() => {
     const q = reprintQuery.trim().toLowerCase();
@@ -268,6 +291,14 @@ function TicketsPage() {
               <option value="Used">Used</option>
               <option value="Cancelled">Cancelled</option>
               <option value="Reprinted">Reprinted</option>
+            </select>
+            <select
+              value={sourceFilter}
+              onChange={(e) => { setSourceFilter(e.target.value as typeof sourceFilter); setPage(1); }}
+              className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-brand-green/40"
+            >
+              <option value="All">All Sources</option>
+              {BOOKING_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
@@ -383,7 +414,10 @@ function TicketsPage() {
                     >
                       {t.ticketNo}
                     </button>
-                    <div className="mt-0.5 text-[10px] text-muted-foreground">Issued {t.issuedAt}</div>
+                    <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span>Issued {t.issuedAt}</span>
+                      <SourceBadge source={sourceFor(t.ticketNo)} />
+                    </div>
                   </td>
                   <td className="px-3 py-3 font-mono text-[12px] font-semibold text-foreground">{t.pnr}</td>
                   <td className="px-3 py-3">
@@ -486,6 +520,24 @@ function TicketsPage() {
           </div>
         </div>
       </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <SourceBarComparison
+          title="Tickets by Source"
+          subtitle="Total tickets issued per channel"
+          metric="Tickets"
+          pick="count"
+          stats={sourceStats}
+          formatter={(v) => String(v)}
+        />
+        <SourceBarComparison
+          title="Revenue by Source"
+          subtitle="Ticket fare grouped by channel"
+          stats={sourceStats}
+        />
+      </div>
+
+
 
       {selected && <TicketDrawer ticket={selected} onClose={() => setSelected(null)} />}
     </AgentShell>

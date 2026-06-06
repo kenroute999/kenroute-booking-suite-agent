@@ -23,6 +23,13 @@ import {
   Lightbulb,
   Droplet,
 } from "lucide-react";
+import {
+  BookingSourceSelector,
+  InventoryStatusBanner,
+  SeatConflictBanner,
+  BookingValidationPanel,
+  type BookingSource,
+} from "@/components/booking-source";
 
 export const Route = createFileRoute("/new-booking")({
   head: () => ({
@@ -99,6 +106,10 @@ interface Passenger {
 
 function NewBooking() {
   const [deck, setDeck] = useState<"lower" | "upper">("lower");
+  const [bookingSource, setBookingSource] = useState<BookingSource>("Agent");
+  const [showConflict, setShowConflict] = useState(false);
+  void setShowConflict;
+
   const lower = useMemo(makeLowerDeck, []);
   const upper = useMemo(makeUpperDeck, []);
   const seats = deck === "lower" ? lower : upper;
@@ -166,6 +177,9 @@ function NewBooking() {
       <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
         {/* LEFT + CENTER */}
         <div className="space-y-5">
+          <InventoryStatusBanner />
+          {showConflict && <SeatConflictBanner onDismiss={() => setShowConflict(false)} />}
+          <BookingSourceSelector value={bookingSource} onChange={setBookingSource} />
           {/* Journey info */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-7">
@@ -391,6 +405,13 @@ function NewBooking() {
 
         {/* RIGHT */}
         <aside className="space-y-5">
+          <BookingValidationPanel
+            routeOk
+            seatsOk={seatCount > 0}
+            fareOk={seatCount > 0}
+            ticketReady={seatCount > 0}
+          />
+
           <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
             <h3 className="mb-3 text-sm font-semibold">Booking Summary</h3>
             <SummaryRow label="Total Seats" value={totalSeats} />

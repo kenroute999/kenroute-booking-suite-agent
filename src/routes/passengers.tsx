@@ -20,6 +20,7 @@ import {
   ChevronRight,
   TrendingUp,
 } from "lucide-react";
+import { SourceBadge, sourceFor } from "@/components/booking-source";
 
 export const Route = createFileRoute("/passengers")({
   component: PassengersPage,
@@ -368,6 +369,7 @@ function PassengersPage() {
                   <th className="px-5 py-3">Total Trips</th>
                   <th className="px-5 py-3">Last Journey</th>
                   <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Customer Type</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -413,6 +415,13 @@ function PassengersPage() {
                       <StatusPill status={p.status} />
                     </td>
                     <td className="px-5 py-3">
+                      {p.status === "VIP" ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200">VIP</span>
+                      ) : (
+                        <SourceBadge source={sourceFor(p.id) === "Corporate" ? "Corporate" : "Agent"} />
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setSelected(p)}
@@ -446,7 +455,7 @@ function PassengersPage() {
                 ))}
                 {pageRows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       No passengers found matching your search.
                     </td>
                   </tr>

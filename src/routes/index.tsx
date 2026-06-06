@@ -17,6 +17,19 @@ import {
   Calendar,
 } from "lucide-react";
 import { useState } from "react";
+import {
+  SourceSummaryGrid,
+  SourcePieChart,
+  InventorySyncCard,
+  type SourceStat,
+} from "@/components/booking-source";
+
+const DASHBOARD_SOURCE_STATS: SourceStat[] = [
+  { source: "Agent", count: 14, revenue: 21450 },
+  { source: "Counter", count: 8, revenue: 10800 },
+  { source: "Phone", count: 4, revenue: 5650 },
+  { source: "Corporate", count: 2, revenue: 4400 },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -151,6 +164,15 @@ function Dashboard() {
             ))}
           </div>
         </section>
+
+        {/* Booking Source Analytics + Inventory Sync */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <SourceSummaryGrid stats={DASHBOARD_SOURCE_STATS} />
+            <SourcePieChart stats={DASHBOARD_SOURCE_STATS} />
+          </div>
+          <InventorySyncCard />
+        </div>
 
         {/* Main grid */}
         <div className="grid gap-6 lg:grid-cols-3">

@@ -13,6 +13,14 @@ import {
   FileSpreadsheet,
   TrendingUp,
 } from "lucide-react";
+import { SourceSummaryGrid, SourceBarComparison, type SourceStat } from "@/components/booking-source";
+
+const REPORT_SOURCE_STATS: SourceStat[] = [
+  { source: "Agent", count: 1124, revenue: 942000 },
+  { source: "Counter", count: 612, revenue: 528400 },
+  { source: "Phone", count: 298, revenue: 246800 },
+  { source: "Corporate", count: 150, revenue: 128000 },
+];
 
 export const Route = createFileRoute("/reports")({
   component: ReportsPage,
@@ -191,6 +199,15 @@ function ReportsPage() {
             ))}
           </div>
         </ChartCard>
+      </div>
+
+      {/* Top Routes Table */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <SourceBarComparison title="Revenue by Booking Source" subtitle="Channel-wise revenue contribution" stats={REPORT_SOURCE_STATS} />
+        <SourceBarComparison title="Bookings by Source" subtitle="Channel-wise booking volume" metric="Bookings" pick="count" stats={REPORT_SOURCE_STATS} formatter={(v) => String(v)} />
+      </div>
+      <div className="mb-6">
+        <SourceSummaryGrid title="Booking Source Analytics" stats={REPORT_SOURCE_STATS} />
       </div>
 
       {/* Top Routes Table */}
