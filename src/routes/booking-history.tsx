@@ -346,6 +346,7 @@ function BookingHistoryPage() {
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">{b.mobile}</td>
                   <td className="px-3 py-3 font-medium text-foreground">{b.route}</td>
+                  <td className="px-3 py-3"><SourceBadge source={sourceFor(b.id)} /></td>
                   <td className="px-3 py-3 text-muted-foreground">{b.boarding}</td>
                   <td className="px-3 py-3">
                     <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-[12px] font-semibold text-foreground">
