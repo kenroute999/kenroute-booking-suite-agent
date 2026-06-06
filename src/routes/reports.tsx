@@ -202,6 +202,15 @@ function ReportsPage() {
       </div>
 
       {/* Top Routes Table */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <SourceBarComparison title="Revenue by Booking Source" subtitle="Channel-wise revenue contribution" stats={REPORT_SOURCE_STATS} />
+        <SourceBarComparison title="Bookings by Source" subtitle="Channel-wise booking volume" metric="Bookings" pick="count" stats={REPORT_SOURCE_STATS} formatter={(v) => String(v)} />
+      </div>
+      <div className="mb-6">
+        <SourceSummaryGrid title="Booking Source Analytics" stats={REPORT_SOURCE_STATS} />
+      </div>
+
+      {/* Top Routes Table */}
       <div className="mb-6 rounded-2xl border border-border bg-card shadow-sm">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
