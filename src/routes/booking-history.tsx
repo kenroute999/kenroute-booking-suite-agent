@@ -298,13 +298,14 @@ function BookingHistoryPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-sm">
+          <table className="w-full min-w-[1300px] text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
                 <th className="px-5 py-3 font-semibold">Booking ID</th>
                 <th className="px-3 py-3 font-semibold">Passenger</th>
                 <th className="px-3 py-3 font-semibold">Mobile</th>
                 <th className="px-3 py-3 font-semibold">Route</th>
+                <th className="px-3 py-3 font-semibold">Source</th>
                 <th className="px-3 py-3 font-semibold">Boarding</th>
                 <th className="px-3 py-3 font-semibold">Seat</th>
                 <th className="px-3 py-3 font-semibold">Journey</th>
