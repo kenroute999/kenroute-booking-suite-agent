@@ -369,6 +369,7 @@ function PassengersPage() {
                   <th className="px-5 py-3">Total Trips</th>
                   <th className="px-5 py-3">Last Journey</th>
                   <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Customer Type</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
