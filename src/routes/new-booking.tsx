@@ -106,6 +106,10 @@ interface Passenger {
 
 function NewBooking() {
   const [deck, setDeck] = useState<"lower" | "upper">("lower");
+  const [bookingSource, setBookingSource] = useState<BookingSource>("Agent");
+  const [showConflict, setShowConflict] = useState(false);
+  void setShowConflict;
+
   const lower = useMemo(makeLowerDeck, []);
   const upper = useMemo(makeUpperDeck, []);
   const seats = deck === "lower" ? lower : upper;
