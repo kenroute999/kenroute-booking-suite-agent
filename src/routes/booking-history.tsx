@@ -168,6 +168,7 @@ function BookingHistoryPage() {
       if (route !== "All Routes" && b.route !== route) return false;
       if (bookingStatus !== "All" && b.status !== bookingStatus) return false;
       if (paymentStatus !== "All" && b.payment !== paymentStatus) return false;
+      if (sourceFilter !== "All" && sourceFor(b.id) !== sourceFilter) return false;
       if (date && b.date !== date) return false;
       if (!q) return true;
       const fields: Record<typeof searchField, string> = {
