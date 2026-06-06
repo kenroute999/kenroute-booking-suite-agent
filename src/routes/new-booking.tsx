@@ -23,6 +23,13 @@ import {
   Lightbulb,
   Droplet,
 } from "lucide-react";
+import {
+  BookingSourceSelector,
+  InventoryStatusBanner,
+  SeatConflictBanner,
+  BookingValidationPanel,
+  type BookingSource,
+} from "@/components/booking-source";
 
 export const Route = createFileRoute("/new-booking")({
   head: () => ({
