@@ -265,12 +265,22 @@ function BookingHistoryPage() {
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-5">
           <FilterSelect label="Route" value={route} onChange={(v) => { setRoute(v); setPage(1); }} options={ROUTES} icon={<Filter className="h-3.5 w-3.5" />} />
           <FilterInput label="Journey Date" type="text" value={date} onChange={(v) => { setDate(v); setPage(1); }} placeholder="e.g. 30 May 2026" icon={<Calendar className="h-3.5 w-3.5" />} />
           <FilterSelect label="Booking Status" value={bookingStatus} onChange={(v) => { setBookingStatus(v as typeof bookingStatus); setPage(1); }} options={["All", "Confirmed", "Completed", "Cancelled", "Pending"]} icon={<TicketCheck className="h-3.5 w-3.5" />} />
           <FilterSelect label="Payment Status" value={paymentStatus} onChange={(v) => { setPaymentStatus(v as typeof paymentStatus); setPage(1); }} options={["All", "Paid", "Refunded", "Pending", "Failed"]} icon={<CreditCard className="h-3.5 w-3.5" />} />
+          <FilterSelect label="Booking Source" value={sourceFilter} onChange={(v) => { setSourceFilter(v as typeof sourceFilter); setPage(1); }} options={["All", ...BOOKING_SOURCES]} icon={<User className="h-3.5 w-3.5" />} />
         </div>
+      </div>
+
+      {/* Revenue by source */}
+      <div className="mb-6">
+        <SourceBarComparison
+          title="Revenue by Booking Source"
+          subtitle="Grouped from all bookings"
+          stats={sourceStats}
+        />
       </div>
 
       {/* Table */}
