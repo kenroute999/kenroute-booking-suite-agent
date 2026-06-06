@@ -170,6 +170,7 @@ function TicketsPage() {
     const q = query.trim().toLowerCase();
     return TICKETS.filter((t) => {
       if (status !== "All" && t.status !== status) return false;
+      if (sourceFilter !== "All" && sourceFor(t.ticketNo) !== sourceFilter) return false;
       if (!q) return true;
       const map = {
         all: `${t.ticketNo} ${t.pnr} ${t.passenger} ${t.mobile}`,
@@ -180,7 +181,7 @@ function TicketsPage() {
       } as const;
       return map[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, status]);
+  }, [query, searchField, status, sourceFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -193,6 +194,19 @@ function TicketsPage() {
     const reprinted = TICKETS.filter((t) => t.status === "Reprinted").length;
     return { active, today, cancelled, reprinted };
   }, []);
+
+  const sourceStats: SourceStat[] = useMemo(
+    () =>
+      BOOKING_SOURCES.map((src) => {
+        const rows = TICKETS.filter((t) => sourceFor(t.ticketNo) === src);
+        return {
+          source: src,
+          count: rows.length,
+          revenue: rows.reduce((s, t) => s + t.fare, 0),
+        };
+      }),
+    [],
+  );
 
   const reprintMatch = useMemo(() => {
     const q = reprintQuery.trim().toLowerCase();
