@@ -146,6 +146,8 @@ export interface MyBooking {
   status: "CREATED" | "CONFIRMED" | "BOARDED" | "COMPLETED" | "CANCELLED" | "REFUNDED";
   source: "AGENT" | "COUNTER" | "PHONE" | "CORPORATE" | "OTA";
   fare: string;
+  /** What the agent earns on this ticket, as a decimal string; "0.00" once cancelled. */
+  commission: string;
   paymentMode: "CASH" | "UPI" | null;
   boardingPoint: string | null;
   droppingPoint: string | null;
