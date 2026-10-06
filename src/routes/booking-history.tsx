@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { bookingView, listMyBookings, myBookingsKey, type MyBooking } from "@/lib/api/booking";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
+import { toast } from "sonner";
+import { errorMessage } from "@/lib/api/client";
+import {
+  bookingView,
+  cancelBooking,
+  listMyBookings,
+  myBookingsKey,
+  type MyBooking,
+} from "@/lib/api/booking";
 import { AgentShell } from "@/components/AgentShell";
 import {
   Search,
@@ -19,7 +28,6 @@ import {
   Ticket,
   Ban,
   IndianRupee,
-  QrCode,
   MapPin,
   Calendar,
   User,
@@ -62,6 +70,10 @@ type Booking = {
   status: BookingStatus;
   /** Real bookings carry their source; sample rows fall back to a derived one. */
   source?: BookingSource;
+  /** Set on real bookings only; sample rows cannot be cancelled. */
+  bookingId?: string;
+  /** What the ticket's QR code holds. */
+  qr?: string;
 };
 
 const ROUTES = [
@@ -92,18 +104,234 @@ function toBookingRow(b: MyBooking): Booking {
 }
 
 const SAMPLE_BOOKINGS: Booking[] = [
-  { id: "KR-2026-10481", ticketNo: "TKT784512", passenger: "Ravi Kumar", gender: "M", mobile: "+91 98765 43210", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-12", date: "30 May 2026", bus: "KR-1024", departure: "21:30", amount: 1450, payment: "Paid", status: "Confirmed" },
-  { id: "KR-2026-10480", ticketNo: "TKT784511", passenger: "Priya Sharma", gender: "F", mobile: "+91 98220 11234", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-08", date: "30 May 2026", bus: "KR-2218", departure: "22:00", amount: 980, payment: "Paid", status: "Confirmed" },
-  { id: "KR-2026-10479", ticketNo: "TKT784510", passenger: "Anand Reddy", gender: "M", mobile: "+91 99887 76655", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-04", date: "29 May 2026", bus: "KR-3340", departure: "23:15", amount: 650, payment: "Paid", status: "Completed" },
-  { id: "KR-2026-10478", ticketNo: "TKT784509", passenger: "Meena Iyer", gender: "F", mobile: "+91 90001 22334", route: "Chennai → Hyderabad", from: "Chennai", to: "Hyderabad", boarding: "Koyambedu · 20:45", dropping: "MGBS · 07:30", seat: "U-15", date: "29 May 2026", bus: "KR-5512", departure: "20:45", amount: 1620, payment: "Refunded", status: "Cancelled" },
-  { id: "KR-2026-10477", ticketNo: "TKT784508", passenger: "Suresh Babu", gender: "M", mobile: "+91 87654 32109", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "Miyapur · 22:10", dropping: "Majestic · 07:00", seat: "L-21", date: "28 May 2026", bus: "KR-1024", departure: "22:10", amount: 1450, payment: "Paid", status: "Completed" },
-  { id: "KR-2026-10476", ticketNo: "TKT784507", passenger: "Kavya Nair", gender: "F", mobile: "+91 70010 99887", route: "Bangalore → Mumbai", from: "Bangalore", to: "Mumbai", boarding: "Yeshwantpur · 18:00", dropping: "Dadar · 10:30", seat: "U-02", date: "28 May 2026", bus: "KR-7788", departure: "18:00", amount: 2150, payment: "Paid", status: "Confirmed" },
-  { id: "KR-2026-10475", ticketNo: "TKT784506", passenger: "Rahul Verma", gender: "M", mobile: "+91 99112 33445", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-07", date: "27 May 2026", bus: "KR-1024", departure: "21:30", amount: 1450, payment: "Pending", status: "Pending" },
-  { id: "KR-2026-10474", ticketNo: "TKT784505", passenger: "Divya Pillai", gender: "F", mobile: "+91 88990 11223", route: "Chennai → Hyderabad", from: "Chennai", to: "Hyderabad", boarding: "Koyambedu · 20:45", dropping: "MGBS · 07:30", seat: "L-18", date: "27 May 2026", bus: "KR-5512", departure: "20:45", amount: 1620, payment: "Paid", status: "Completed" },
-  { id: "KR-2026-10473", ticketNo: "TKT784504", passenger: "Vinod Singh", gender: "M", mobile: "+91 77665 54433", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-11", date: "26 May 2026", bus: "KR-2218", departure: "22:00", amount: 980, payment: "Refunded", status: "Cancelled" },
-  { id: "KR-2026-10472", ticketNo: "TKT784503", passenger: "Lakshmi Devi", gender: "F", mobile: "+91 90909 80808", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-09", date: "26 May 2026", bus: "KR-3340", departure: "23:15", amount: 650, payment: "Paid", status: "Completed" },
-  { id: "KR-2026-10471", ticketNo: "TKT784502", passenger: "Arjun Mehta", gender: "M", mobile: "+91 81234 56789", route: "Bangalore → Mumbai", from: "Bangalore", to: "Mumbai", boarding: "Yeshwantpur · 18:00", dropping: "Dadar · 10:30", seat: "U-19", date: "25 May 2026", bus: "KR-7788", departure: "18:00", amount: 2150, payment: "Paid", status: "Completed" },
-  { id: "KR-2026-10470", ticketNo: "TKT784501", passenger: "Sneha Reddy", gender: "F", mobile: "+91 98123 45670", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "Miyapur · 22:10", dropping: "Majestic · 07:00", seat: "L-03", date: "25 May 2026", bus: "KR-1024", departure: "22:10", amount: 1450, payment: "Paid", status: "Completed" },
+  {
+    id: "KR-2026-10481",
+    ticketNo: "TKT784512",
+    passenger: "Ravi Kumar",
+    gender: "M",
+    mobile: "+91 98765 43210",
+    route: "Hyderabad → Bangalore",
+    from: "Hyderabad",
+    to: "Bangalore",
+    boarding: "MGBS Bus Stand · 21:30",
+    dropping: "Madiwala · 06:45",
+    seat: "L-12",
+    date: "30 May 2026",
+    bus: "KR-1024",
+    departure: "21:30",
+    amount: 1450,
+    payment: "Paid",
+    status: "Confirmed",
+  },
+  {
+    id: "KR-2026-10480",
+    ticketNo: "TKT784511",
+    passenger: "Priya Sharma",
+    gender: "F",
+    mobile: "+91 98220 11234",
+    route: "Bangalore → Chennai",
+    from: "Bangalore",
+    to: "Chennai",
+    boarding: "Madiwala · 22:00",
+    dropping: "Koyambedu · 05:30",
+    seat: "U-08",
+    date: "30 May 2026",
+    bus: "KR-2218",
+    departure: "22:00",
+    amount: 980,
+    payment: "Paid",
+    status: "Confirmed",
+  },
+  {
+    id: "KR-2026-10479",
+    ticketNo: "TKT784510",
+    passenger: "Anand Reddy",
+    gender: "M",
+    mobile: "+91 99887 76655",
+    route: "Hyderabad → Vijayawada",
+    from: "Hyderabad",
+    to: "Vijayawada",
+    boarding: "LB Nagar · 23:15",
+    dropping: "Benz Circle · 04:45",
+    seat: "L-04",
+    date: "29 May 2026",
+    bus: "KR-3340",
+    departure: "23:15",
+    amount: 650,
+    payment: "Paid",
+    status: "Completed",
+  },
+  {
+    id: "KR-2026-10478",
+    ticketNo: "TKT784509",
+    passenger: "Meena Iyer",
+    gender: "F",
+    mobile: "+91 90001 22334",
+    route: "Chennai → Hyderabad",
+    from: "Chennai",
+    to: "Hyderabad",
+    boarding: "Koyambedu · 20:45",
+    dropping: "MGBS · 07:30",
+    seat: "U-15",
+    date: "29 May 2026",
+    bus: "KR-5512",
+    departure: "20:45",
+    amount: 1620,
+    payment: "Refunded",
+    status: "Cancelled",
+  },
+  {
+    id: "KR-2026-10477",
+    ticketNo: "TKT784508",
+    passenger: "Suresh Babu",
+    gender: "M",
+    mobile: "+91 87654 32109",
+    route: "Hyderabad → Bangalore",
+    from: "Hyderabad",
+    to: "Bangalore",
+    boarding: "Miyapur · 22:10",
+    dropping: "Majestic · 07:00",
+    seat: "L-21",
+    date: "28 May 2026",
+    bus: "KR-1024",
+    departure: "22:10",
+    amount: 1450,
+    payment: "Paid",
+    status: "Completed",
+  },
+  {
+    id: "KR-2026-10476",
+    ticketNo: "TKT784507",
+    passenger: "Kavya Nair",
+    gender: "F",
+    mobile: "+91 70010 99887",
+    route: "Bangalore → Mumbai",
+    from: "Bangalore",
+    to: "Mumbai",
+    boarding: "Yeshwantpur · 18:00",
+    dropping: "Dadar · 10:30",
+    seat: "U-02",
+    date: "28 May 2026",
+    bus: "KR-7788",
+    departure: "18:00",
+    amount: 2150,
+    payment: "Paid",
+    status: "Confirmed",
+  },
+  {
+    id: "KR-2026-10475",
+    ticketNo: "TKT784506",
+    passenger: "Rahul Verma",
+    gender: "M",
+    mobile: "+91 99112 33445",
+    route: "Hyderabad → Bangalore",
+    from: "Hyderabad",
+    to: "Bangalore",
+    boarding: "MGBS Bus Stand · 21:30",
+    dropping: "Madiwala · 06:45",
+    seat: "L-07",
+    date: "27 May 2026",
+    bus: "KR-1024",
+    departure: "21:30",
+    amount: 1450,
+    payment: "Pending",
+    status: "Pending",
+  },
+  {
+    id: "KR-2026-10474",
+    ticketNo: "TKT784505",
+    passenger: "Divya Pillai",
+    gender: "F",
+    mobile: "+91 88990 11223",
+    route: "Chennai → Hyderabad",
+    from: "Chennai",
+    to: "Hyderabad",
+    boarding: "Koyambedu · 20:45",
+    dropping: "MGBS · 07:30",
+    seat: "L-18",
+    date: "27 May 2026",
+    bus: "KR-5512",
+    departure: "20:45",
+    amount: 1620,
+    payment: "Paid",
+    status: "Completed",
+  },
+  {
+    id: "KR-2026-10473",
+    ticketNo: "TKT784504",
+    passenger: "Vinod Singh",
+    gender: "M",
+    mobile: "+91 77665 54433",
+    route: "Bangalore → Chennai",
+    from: "Bangalore",
+    to: "Chennai",
+    boarding: "Madiwala · 22:00",
+    dropping: "Koyambedu · 05:30",
+    seat: "U-11",
+    date: "26 May 2026",
+    bus: "KR-2218",
+    departure: "22:00",
+    amount: 980,
+    payment: "Refunded",
+    status: "Cancelled",
+  },
+  {
+    id: "KR-2026-10472",
+    ticketNo: "TKT784503",
+    passenger: "Lakshmi Devi",
+    gender: "F",
+    mobile: "+91 90909 80808",
+    route: "Hyderabad → Vijayawada",
+    from: "Hyderabad",
+    to: "Vijayawada",
+    boarding: "LB Nagar · 23:15",
+    dropping: "Benz Circle · 04:45",
+    seat: "L-09",
+    date: "26 May 2026",
+    bus: "KR-3340",
+    departure: "23:15",
+    amount: 650,
+    payment: "Paid",
+    status: "Completed",
+  },
+  {
+    id: "KR-2026-10471",
+    ticketNo: "TKT784502",
+    passenger: "Arjun Mehta",
+    gender: "M",
+    mobile: "+91 81234 56789",
+    route: "Bangalore → Mumbai",
+    from: "Bangalore",
+    to: "Mumbai",
+    boarding: "Yeshwantpur · 18:00",
+    dropping: "Dadar · 10:30",
+    seat: "U-19",
+    date: "25 May 2026",
+    bus: "KR-7788",
+    departure: "18:00",
+    amount: 2150,
+    payment: "Paid",
+    status: "Completed",
+  },
+  {
+    id: "KR-2026-10470",
+    ticketNo: "TKT784501",
+    passenger: "Sneha Reddy",
+    gender: "F",
+    mobile: "+91 98123 45670",
+    route: "Hyderabad → Bangalore",
+    from: "Hyderabad",
+    to: "Bangalore",
+    boarding: "Miyapur · 22:10",
+    dropping: "Majestic · 07:00",
+    seat: "L-03",
+    date: "25 May 2026",
+    bus: "KR-1024",
+    departure: "22:10",
+    amount: 1450,
+    payment: "Paid",
+    status: "Completed",
+  },
 ];
 
 const PAGE_SIZE = 8;
@@ -116,7 +344,9 @@ function StatusPill({ status }: { status: BookingStatus }) {
     Pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${map[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${map[status]}`}
+    >
       {status}
     </span>
   );
@@ -130,7 +360,9 @@ function PaymentPill({ status }: { status: PaymentStatus }) {
     Failed: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${map[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${map[status]}`}
+    >
       {status}
     </span>
   );
@@ -181,7 +413,9 @@ function BookingHistoryPage() {
     [mine.data],
   );
   const [query, setQuery] = useState("");
-  const [searchField, setSearchField] = useState<"all" | "id" | "name" | "mobile" | "ticket">("all");
+  const [searchField, setSearchField] = useState<"all" | "id" | "name" | "mobile" | "ticket">(
+    "all",
+  );
   const [route, setRoute] = useState("All Routes");
   const [date, setDate] = useState("");
   const [bookingStatus, setBookingStatus] = useState<"All" | BookingStatus>("All");
@@ -189,6 +423,86 @@ function BookingHistoryPage() {
   const [sourceFilter, setSourceFilter] = useState<"All" | BookingSource>("All");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Booking | null>(null);
+
+  const queryClient = useQueryClient();
+  const cancel = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      toast.success("Booking cancelled. The seat is back on sale.");
+      setSelected(null);
+      return queryClient.invalidateQueries({ queryKey: ["booking"] });
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  const actions: BookingActions = {
+    // The ticket lives in the drawer, so open it and print once it is on screen.
+    // "Download PDF" is the same dialog: choose "Save as PDF" as the printer.
+    print: (b) => {
+      setSelected(b);
+      window.setTimeout(() => window.print(), 200);
+    },
+    contact: (b) => {
+      window.location.href = `tel:${b.mobile.replace(/[^\d+]/g, "")}`;
+    },
+    cancel: (b) => {
+      if (!b.bookingId) {
+        toast.info("This is a sample booking, so there is nothing to cancel.");
+        return;
+      }
+      if (
+        window.confirm(
+          `Cancel the booking for ${b.passenger}, seat ${b.seat}? This cannot be undone.`,
+        )
+      ) {
+        cancel.mutate(b.bookingId);
+      }
+    },
+  };
+
+  // Everything the filters currently show, as a spreadsheet file.
+  const exportCsv = () => {
+    const header = [
+      "Booking ID",
+      "Ticket No",
+      "Passenger",
+      "Mobile",
+      "Route",
+      "Seat",
+      "Journey Date",
+      "Departure",
+      "Bus",
+      "Amount",
+      "Payment",
+      "Status",
+    ];
+    const lines = filtered.map((b) =>
+      [
+        b.id,
+        b.ticketNo,
+        b.passenger,
+        b.mobile,
+        b.route,
+        b.seat,
+        b.date,
+        b.departure,
+        b.bus,
+        b.amount,
+        b.payment,
+        b.status,
+      ]
+        .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+        .join(","),
+    );
+    const url = URL.createObjectURL(
+      new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "kenroute-bookings.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -215,7 +529,9 @@ function BookingHistoryPage() {
   const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const totals = useMemo(() => {
-    const confirmed = BOOKINGS.filter((b) => b.status === "Confirmed" || b.status === "Completed").length;
+    const confirmed = BOOKINGS.filter(
+      (b) => b.status === "Confirmed" || b.status === "Completed",
+    ).length;
     const cancelled = BOOKINGS.filter((b) => b.status === "Cancelled").length;
     const revenue = BOOKINGS.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0);
     return { total: BOOKINGS.length, confirmed, cancelled, revenue };
@@ -239,10 +555,15 @@ function BookingHistoryPage() {
         <div>
           <div className="text-[11px] uppercase tracking-widest text-white/60">Agent · AGT1024</div>
           <h2 className="mt-1 text-xl font-bold">All Bookings &amp; Tickets</h2>
-          <p className="text-sm text-white/70">Search, track, reprint and manage every ticket you've issued.</p>
+          <p className="text-sm text-white/70">
+            Search, track, reprint and manage every ticket you've issued.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+          <button
+            onClick={exportCsv}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+          >
             <Download className="h-4 w-4" />
             Export CSV
           </button>
@@ -255,10 +576,34 @@ function BookingHistoryPage() {
 
       {/* Stats */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Bookings" value={String(totals.total)} sub="All time" icon={Ticket} tone="navy" />
-        <StatCard label="Confirmed Tickets" value={String(totals.confirmed)} sub="Active + completed" icon={TicketCheck} tone="green" />
-        <StatCard label="Cancelled Tickets" value={String(totals.cancelled)} sub="Refund processed" icon={Ban} tone="rose" />
-        <StatCard label="Revenue Generated" value={`₹${totals.revenue.toLocaleString("en-IN")}`} sub="Paid bookings" icon={IndianRupee} tone="blue" />
+        <StatCard
+          label="Total Bookings"
+          value={String(totals.total)}
+          sub="All time"
+          icon={Ticket}
+          tone="navy"
+        />
+        <StatCard
+          label="Confirmed Tickets"
+          value={String(totals.confirmed)}
+          sub="Active + completed"
+          icon={TicketCheck}
+          tone="green"
+        />
+        <StatCard
+          label="Cancelled Tickets"
+          value={String(totals.cancelled)}
+          sub="Refund processed"
+          icon={Ban}
+          tone="rose"
+        />
+        <StatCard
+          label="Revenue Generated"
+          value={`₹${totals.revenue.toLocaleString("en-IN")}`}
+          sub="Paid bookings"
+          icon={IndianRupee}
+          tone="blue"
+        />
       </div>
 
       {/* Search + Filters */}
@@ -294,11 +639,57 @@ function BookingHistoryPage() {
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-5">
-          <FilterSelect label="Route" value={route} onChange={(v) => { setRoute(v); setPage(1); }} options={ROUTES} icon={<Filter className="h-3.5 w-3.5" />} />
-          <FilterInput label="Journey Date" type="text" value={date} onChange={(v) => { setDate(v); setPage(1); }} placeholder="e.g. 30 May 2026" icon={<Calendar className="h-3.5 w-3.5" />} />
-          <FilterSelect label="Booking Status" value={bookingStatus} onChange={(v) => { setBookingStatus(v as typeof bookingStatus); setPage(1); }} options={["All", "Confirmed", "Completed", "Cancelled", "Pending"]} icon={<TicketCheck className="h-3.5 w-3.5" />} />
-          <FilterSelect label="Payment Status" value={paymentStatus} onChange={(v) => { setPaymentStatus(v as typeof paymentStatus); setPage(1); }} options={["All", "Paid", "Refunded", "Pending", "Failed"]} icon={<CreditCard className="h-3.5 w-3.5" />} />
-          <FilterSelect label="Booking Source" value={sourceFilter} onChange={(v) => { setSourceFilter(v as typeof sourceFilter); setPage(1); }} options={["All", ...BOOKING_SOURCES]} icon={<User className="h-3.5 w-3.5" />} />
+          <FilterSelect
+            label="Route"
+            value={route}
+            onChange={(v) => {
+              setRoute(v);
+              setPage(1);
+            }}
+            options={ROUTES}
+            icon={<Filter className="h-3.5 w-3.5" />}
+          />
+          <FilterInput
+            label="Journey Date"
+            type="text"
+            value={date}
+            onChange={(v) => {
+              setDate(v);
+              setPage(1);
+            }}
+            placeholder="e.g. 30 May 2026"
+            icon={<Calendar className="h-3.5 w-3.5" />}
+          />
+          <FilterSelect
+            label="Booking Status"
+            value={bookingStatus}
+            onChange={(v) => {
+              setBookingStatus(v as typeof bookingStatus);
+              setPage(1);
+            }}
+            options={["All", "Confirmed", "Completed", "Cancelled", "Pending"]}
+            icon={<TicketCheck className="h-3.5 w-3.5" />}
+          />
+          <FilterSelect
+            label="Payment Status"
+            value={paymentStatus}
+            onChange={(v) => {
+              setPaymentStatus(v as typeof paymentStatus);
+              setPage(1);
+            }}
+            options={["All", "Paid", "Refunded", "Pending", "Failed"]}
+            icon={<CreditCard className="h-3.5 w-3.5" />}
+          />
+          <FilterSelect
+            label="Booking Source"
+            value={sourceFilter}
+            onChange={(v) => {
+              setSourceFilter(v as typeof sourceFilter);
+              setPage(1);
+            }}
+            options={["All", ...BOOKING_SOURCES]}
+            icon={<User className="h-3.5 w-3.5" />}
+          />
         </div>
       </div>
 
@@ -345,10 +736,7 @@ function BookingHistoryPage() {
             </thead>
             <tbody>
               {paged.map((b) => (
-                <tr
-                  key={b.id}
-                  className="border-b border-border last:border-0 hover:bg-muted/30"
-                >
+                <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                   <td className="px-5 py-3">
                     <button
                       onClick={() => setSelected(b)}
@@ -374,7 +762,9 @@ function BookingHistoryPage() {
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">{b.mobile}</td>
                   <td className="px-3 py-3 font-medium text-foreground">{b.route}</td>
-                  <td className="px-3 py-3"><SourceBadge source={(b.source ?? sourceFor(b.id))} /></td>
+                  <td className="px-3 py-3">
+                    <SourceBadge source={b.source ?? sourceFor(b.id)} />
+                  </td>
                   <td className="px-3 py-3 text-muted-foreground">{b.boarding}</td>
                   <td className="px-3 py-3">
                     <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-[12px] font-semibold text-foreground">
@@ -396,18 +786,20 @@ function BookingHistoryPage() {
                       <IconBtn title="View Ticket" onClick={() => setSelected(b)}>
                         <Eye className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Reprint Ticket">
+                      <IconBtn title="Reprint Ticket" onClick={() => actions.print(b)}>
                         <Printer className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Download PDF">
+                      <IconBtn title="Download PDF" onClick={() => actions.print(b)}>
                         <Download className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Contact Passenger">
+                      <IconBtn title="Contact Passenger" onClick={() => actions.contact(b)}>
                         <Phone className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Cancel Booking" danger>
-                        <XCircle className="h-4 w-4" />
-                      </IconBtn>
+                      {b.status === "Confirmed" && (
+                        <IconBtn title="Cancel Booking" danger onClick={() => actions.cancel(b)}>
+                          <XCircle className="h-4 w-4" />
+                        </IconBtn>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -464,7 +856,9 @@ function BookingHistoryPage() {
       </div>
 
       {/* Drawer */}
-      {selected && <BookingDrawer booking={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <BookingDrawer booking={selected} actions={actions} onClose={() => setSelected(null)} />
+      )}
     </AgentShell>
   );
 }
@@ -485,7 +879,9 @@ function IconBtn({
       title={title}
       onClick={onClick}
       className={`inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-muted ${
-        danger ? "hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" : "hover:text-foreground"
+        danger
+          ? "hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+          : "hover:text-foreground"
       }`}
     >
       {children}
@@ -559,14 +955,26 @@ function FilterInput({
   );
 }
 
-function BookingDrawer({ booking, onClose }: { booking: Booking; onClose: () => void }) {
+type BookingActions = Record<"print" | "contact" | "cancel", (b: Booking) => void>;
+
+function BookingDrawer({
+  booking,
+  actions,
+  onClose,
+}: {
+  booking: Booking;
+  actions: BookingActions;
+  onClose: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <aside className="flex h-full w-full max-w-md flex-col bg-background shadow-2xl">
         <div className="flex items-center justify-between border-b border-border bg-navy px-5 py-4 text-white">
           <div>
-            <div className="text-[11px] uppercase tracking-widest text-white/60">Booking Details</div>
+            <div className="text-[11px] uppercase tracking-widest text-white/60">
+              Booking Details
+            </div>
             <div className="font-mono text-sm font-semibold">{booking.id}</div>
           </div>
           <button
@@ -579,10 +987,12 @@ function BookingDrawer({ booking, onClose }: { booking: Booking; onClose: () => 
 
         <div className="flex-1 overflow-y-auto p-5">
           {/* Ticket preview */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="print-area overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between bg-gradient-to-r from-brand-green to-emerald-600 px-5 py-3 text-white">
               <div>
-                <div className="text-[10px] uppercase tracking-widest opacity-80">KenRoute Ticket</div>
+                <div className="text-[10px] uppercase tracking-widest opacity-80">
+                  KenRoute Ticket
+                </div>
                 <div className="font-mono text-sm font-bold">{booking.ticketNo}</div>
               </div>
               <TicketCheck className="h-6 w-6" />
@@ -605,8 +1015,13 @@ function BookingDrawer({ booking, onClose }: { booking: Booking; onClose: () => 
                   <div className="text-[10px] uppercase text-muted-foreground">Seat</div>
                   <div className="font-mono text-xl font-bold text-foreground">{booking.seat}</div>
                 </div>
-                <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-border bg-white">
-                  <QrCode className="h-16 w-16 text-navy" />
+                <div className="flex flex-col items-center gap-1">
+                  <div className="rounded-lg border border-border bg-white p-1.5">
+                    <QRCodeSVG value={booking.qr ?? booking.id} size={76} level="M" />
+                  </div>
+                  <div className="font-mono text-[10px] font-semibold text-muted-foreground">
+                    {booking.qr ?? booking.id}
+                  </div>
                 </div>
               </div>
             </div>
@@ -636,19 +1051,33 @@ function BookingDrawer({ booking, onClose }: { booking: Booking; onClose: () => 
         </div>
 
         <div className="grid grid-cols-2 gap-2 border-t border-border bg-card p-4">
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
             <Printer className="h-4 w-4" />
             Reprint
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green/90">
+          <button
+            onClick={() => window.print()}
+            title="Choose 'Save as PDF' in the print dialog"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green/90"
+          >
             <Download className="h-4 w-4" />
             Download PDF
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+          <button
+            onClick={() => actions.contact(booking)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
             <Phone className="h-4 w-4" />
             Contact
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100">
+          <button
+            onClick={() => actions.cancel(booking)}
+            disabled={booking.status !== "Confirmed"}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <XCircle className="h-4 w-4" />
             Cancel
           </button>
