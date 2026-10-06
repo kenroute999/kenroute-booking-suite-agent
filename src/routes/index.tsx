@@ -232,7 +232,7 @@ function Dashboard() {
                     <>
                       <div className="text-xs uppercase tracking-wider text-white/70">{c.label}</div>
                       <div className="mt-1 text-2xl font-bold">{c.value}</div>
-                      <div className="mt-1 text-[11px] text-white/70">Auto-credited to wallet</div>
+                      <div className="mt-1 text-[11px] text-white/70">Paid out by your operator</div>
                     </>
                   ) : (
                     <>

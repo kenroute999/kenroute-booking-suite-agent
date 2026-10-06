@@ -1,5 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
+import { toast } from "sonner";
+import { errorMessage } from "@/lib/api/client";
+import {
+  bookingView,
+  cancelBooking,
+  listMyBookings,
+  mailLink,
+  myBookingsKey,
+  whatsappLink,
+  type MyBooking,
+} from "@/lib/api/booking";
 import { AgentShell } from "@/components/AgentShell";
 import {
   Search,
@@ -15,7 +28,6 @@ import {
   TicketCheck,
   Ban,
   RotateCw,
-  QrCode,
   MapPin,
   User,
   CreditCard,
@@ -60,9 +72,15 @@ type TicketRow = {
   fare: number;
   status: TicketStatus;
   issuedAt: string;
+  /** Real bookings carry their source; sample rows fall back to a derived one. */
+  source?: BookingSource;
+  /** Set on real bookings only; sample rows cannot be cancelled. */
+  bookingId?: string;
+  /** What the ticket's QR code holds. */
+  qr?: string;
 };
 
-const TICKETS: TicketRow[] = [
+const SAMPLE_TICKETS: TicketRow[] = [
   { ticketNo: "TKT784512", pnr: "PNR8842051", passenger: "Ravi Kumar", gender: "M", mobile: "+91 98765 43210", email: "ravi.k@mail.com", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-12", date: "30 May 2026", bus: "KR-1024", departure: "21:30", arrival: "06:45", fare: 1450, status: "Active", issuedAt: "30 May 2026 · 14:22" },
   { ticketNo: "TKT784511", pnr: "PNR8842050", passenger: "Priya Sharma", gender: "F", mobile: "+91 98220 11234", email: "priya.s@mail.com", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-08", date: "30 May 2026", bus: "KR-2218", departure: "22:00", arrival: "05:30", fare: 980, status: "Active", issuedAt: "30 May 2026 · 13:08" },
   { ticketNo: "TKT784510", pnr: "PNR8842049", passenger: "Anand Reddy", gender: "M", mobile: "+91 99887 76655", email: "anand.r@mail.com", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-04", date: "29 May 2026", bus: "KR-3340", departure: "23:15", arrival: "04:45", fare: 650, status: "Used", issuedAt: "29 May 2026 · 18:55" },
@@ -76,6 +94,20 @@ const TICKETS: TicketRow[] = [
 ];
 
 const PAGE_SIZE = 8;
+
+const TICKET_STATUS: Record<MyBooking["status"], TicketStatus> = {
+  CREATED: "Active",
+  CONFIRMED: "Active",
+  BOARDED: "Used",
+  COMPLETED: "Used",
+  CANCELLED: "Cancelled",
+  REFUNDED: "Cancelled",
+};
+
+function toTicketRow(b: MyBooking): TicketRow {
+  const v = bookingView(b);
+  return { ...v, email: "—", fare: v.amount, status: TICKET_STATUS[b.status] };
+}
 
 function StatusPill({ status }: { status: TicketStatus }) {
   const map: Record<TicketStatus, string> = {
@@ -157,6 +189,12 @@ function IconBtn({
 }
 
 function TicketsPage() {
+  const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
+  // Real bookings first, then the sample rows.
+  const TICKETS = useMemo(
+    () => [...(mine.data ?? []).map(toTicketRow), ...SAMPLE_TICKETS],
+    [mine.data],
+  );
   const [query, setQuery] = useState("");
   const [searchField, setSearchField] = useState<"all" | "pnr" | "ticket" | "mobile" | "name">("all");
   const [status, setStatus] = useState<"All" | TicketStatus>("All");
@@ -166,11 +204,44 @@ function TicketsPage() {
   const [reprintQuery, setReprintQuery] = useState("");
   const [reprintMode, setReprintMode] = useState<"mobile" | "pnr">("mobile");
 
+  const queryClient = useQueryClient();
+  const cancel = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      toast.success("Ticket cancelled. The seat is back on sale.");
+      setSelected(null);
+      return queryClient.invalidateQueries({ queryKey: ["booking"] });
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  const actions: TicketActions = {
+    // The e-ticket lives in the drawer, so open it and print once it is on screen.
+    // "Download PDF" is the same dialog: choose "Save as PDF" as the printer.
+    print: (t) => {
+      setSelected(t);
+      window.setTimeout(() => window.print(), 200);
+    },
+    whatsapp: (t) => window.open(whatsappLink(t), "_blank", "noopener"),
+    email: (t) => {
+      window.location.href = mailLink(t);
+    },
+    cancel: (t) => {
+      if (!t.bookingId) {
+        toast.info("This is a sample ticket, so there is nothing to cancel.");
+        return;
+      }
+      if (window.confirm(`Cancel the ticket for ${t.passenger}, seat ${t.seat}? This cannot be undone.`)) {
+        cancel.mutate(t.bookingId);
+      }
+    },
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return TICKETS.filter((t) => {
       if (status !== "All" && t.status !== status) return false;
-      if (sourceFilter !== "All" && sourceFor(t.ticketNo) !== sourceFilter) return false;
+      if (sourceFilter !== "All" && (t.source ?? sourceFor(t.ticketNo)) !== sourceFilter) return false;
       if (!q) return true;
       const map = {
         all: `${t.ticketNo} ${t.pnr} ${t.passenger} ${t.mobile}`,
@@ -181,7 +252,7 @@ function TicketsPage() {
       } as const;
       return map[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, status, sourceFilter]);
+  }, [query, searchField, status, sourceFilter, TICKETS]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -193,19 +264,19 @@ function TicketsPage() {
     const cancelled = TICKETS.filter((t) => t.status === "Cancelled").length;
     const reprinted = TICKETS.filter((t) => t.status === "Reprinted").length;
     return { active, today, cancelled, reprinted };
-  }, []);
+  }, [TICKETS]);
 
   const sourceStats: SourceStat[] = useMemo(
     () =>
       BOOKING_SOURCES.map((src) => {
-        const rows = TICKETS.filter((t) => sourceFor(t.ticketNo) === src);
+        const rows = TICKETS.filter((t) => (t.source ?? sourceFor(t.ticketNo)) === src);
         return {
           source: src,
           count: rows.length,
           revenue: rows.reduce((s, t) => s + t.fare, 0),
         };
       }),
-    [],
+    [TICKETS],
   );
 
   const reprintMatch = useMemo(() => {
@@ -214,7 +285,7 @@ function TicketsPage() {
     return TICKETS.filter((t) =>
       (reprintMode === "mobile" ? t.mobile : t.pnr).toLowerCase().includes(q),
     ).slice(0, 3);
-  }, [reprintQuery, reprintMode]);
+  }, [reprintQuery, reprintMode, TICKETS]);
 
   return (
     <AgentShell title="Tickets Management">
@@ -416,7 +487,7 @@ function TicketsPage() {
                     </button>
                     <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
                       <span>Issued {t.issuedAt}</span>
-                      <SourceBadge source={sourceFor(t.ticketNo)} />
+                      <SourceBadge source={(t.source ?? sourceFor(t.ticketNo))} />
                     </div>
                   </td>
                   <td className="px-3 py-3 font-mono text-[12px] font-semibold text-foreground">{t.pnr}</td>
@@ -451,21 +522,23 @@ function TicketsPage() {
                       <IconBtn title="View Ticket" tone="primary" onClick={() => setSelected(t)}>
                         <Eye className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Reprint">
+                      <IconBtn title="Reprint" onClick={() => actions.print(t)}>
                         <Printer className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Download PDF">
+                      <IconBtn title="Download PDF" onClick={() => actions.print(t)}>
                         <Download className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Share via WhatsApp" tone="whatsapp">
+                      <IconBtn title="Share via WhatsApp" tone="whatsapp" onClick={() => actions.whatsapp(t)}>
                         <MessageCircle className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Send via Email">
+                      <IconBtn title="Send via Email" onClick={() => actions.email(t)}>
                         <Mail className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Cancel Ticket" tone="danger">
-                        <XCircle className="h-4 w-4" />
-                      </IconBtn>
+                      {t.status === "Active" && (
+                        <IconBtn title="Cancel Ticket" tone="danger" onClick={() => actions.cancel(t)}>
+                          <XCircle className="h-4 w-4" />
+                        </IconBtn>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -539,12 +612,24 @@ function TicketsPage() {
 
 
 
-      {selected && <TicketDrawer ticket={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <TicketDrawer ticket={selected} actions={actions} onClose={() => setSelected(null)} />
+      )}
     </AgentShell>
   );
 }
 
-function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => void }) {
+type TicketActions = Record<"print" | "whatsapp" | "email" | "cancel", (t: TicketRow) => void>;
+
+function TicketDrawer({
+  ticket,
+  actions,
+  onClose,
+}: {
+  ticket: TicketRow;
+  actions: TicketActions;
+  onClose: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -564,7 +649,7 @@ function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => v
 
         <div className="flex-1 overflow-y-auto p-5">
           {/* E-Ticket */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-md">
+          <div className="print-area overflow-hidden rounded-2xl border border-border bg-white shadow-md">
             <div className="flex items-center justify-between bg-gradient-to-r from-navy to-navy/90 px-5 py-4 text-white">
               <div>
                 <div className="text-[10px] uppercase tracking-widest text-white/60">KenRoute</div>
@@ -610,8 +695,13 @@ function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => v
                 <div className="text-sm font-bold text-foreground">{ticket.passenger}</div>
                 <div className="text-[11px] text-muted-foreground">{ticket.mobile}</div>
               </div>
-              <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-border bg-white">
-                <QrCode className="h-20 w-20 text-navy" />
+              <div className="flex flex-col items-center gap-1">
+                <div className="rounded-lg border border-border bg-white p-1.5">
+                  <QRCodeSVG value={ticket.qr ?? ticket.pnr} size={84} level="M" />
+                </div>
+                <div className="font-mono text-[10px] font-semibold text-muted-foreground">
+                  {ticket.qr ?? ticket.pnr}
+                </div>
               </div>
             </div>
 
@@ -643,22 +733,44 @@ function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => v
         </div>
 
         <div className="grid grid-cols-2 gap-2 border-t border-border bg-card p-4">
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green/90">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green/90"
+          >
             <Printer className="h-4 w-4" />
             Reprint
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+          <button
+            onClick={() => window.print()}
+            title="Choose 'Save as PDF' in the print dialog"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
             <Download className="h-4 w-4" />
             Download PDF
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100">
+          <button
+            onClick={() => actions.whatsapp(ticket)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+          >
             <MessageCircle className="h-4 w-4" />
             WhatsApp
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+          <button
+            onClick={() => actions.email(ticket)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
             <Mail className="h-4 w-4" />
             Email
           </button>
+          {ticket.status === "Active" && (
+            <button
+              onClick={() => actions.cancel(ticket)}
+              className="col-span-2 inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              <XCircle className="h-4 w-4" />
+              Cancel Ticket
+            </button>
+          )}
         </div>
       </aside>
     </div>

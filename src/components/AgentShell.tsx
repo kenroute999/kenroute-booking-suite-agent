@@ -1,14 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ReactNode } from "react";
 import logo from "@/assets/kenroute-logo.png";
-import { sessionStore, useSession } from "@/lib/session";
+import { signOut } from "@/lib/api/client";
+import { useSession } from "@/lib/session";
 import {
   LayoutDashboard,
   TicketPlus,
   History,
   Ticket,
   Users,
-  Wallet,
   BarChart3,
   Tag,
   HelpCircle,
@@ -24,7 +24,6 @@ const navItems = [
   { to: "/booking-history", label: "Booking History", icon: History },
   { to: "/tickets", label: "Tickets", icon: Ticket },
   { to: "/passengers", label: "Passengers", icon: Users },
-  { to: "/wallet", label: "Wallet / Commission", icon: Wallet },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/offers", label: "Offers", icon: Tag },
   { to: "/support", label: "Support", icon: HelpCircle },
@@ -41,14 +40,14 @@ export function AgentShell({ title, children }: { title: string; children: React
   const initial = (displayName.trim().charAt(0) || "A").toUpperCase();
 
   async function handleLogout() {
-    sessionStore.logout();
+    await signOut();
     await navigate({ to: "/login", replace: true });
   }
 
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex print:!hidden">
         <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
           <img src={logo} alt="KenRoute" className="h-10 w-auto rounded-md bg-white p-1" />
           <div className="leading-tight">
@@ -78,14 +77,6 @@ export function AgentShell({ title, children }: { title: string; children: React
           ))}
         </nav>
 
-        <div className="mx-3 mb-3 rounded-xl border border-sidebar-border bg-white/[0.03] p-4">
-          <div className="text-[11px] uppercase tracking-wide text-sidebar-foreground/60">
-            Wallet Balance
-          </div>
-          <div className="mt-1 text-xl font-bold text-brand-green">₹12,450.00</div>
-          <div className="mt-1 text-[11px] text-sidebar-foreground/60">Available for Booking</div>
-        </div>
-
         <button
           type="button"
           onClick={handleLogout}
@@ -98,7 +89,7 @@ export function AgentShell({ title, children }: { title: string; children: React
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 px-6 backdrop-blur">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 px-6 backdrop-blur print:hidden">
           <h1 className="text-lg font-semibold tracking-tight text-foreground">{title}</h1>
           <div className="flex items-center gap-4">
             <button className="relative rounded-full p-2 text-muted-foreground hover:bg-muted">
