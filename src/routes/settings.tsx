@@ -77,7 +77,6 @@ function SettingsPage() {
   const [sms, setSms] = useState(true);
   const [emailN, setEmailN] = useState(true);
   const [bookingAlert, setBookingAlert] = useState(true);
-  const [walletAlert, setWalletAlert] = useState(false);
   const [twoFA, setTwoFA] = useState(true);
   const [autoDownload, setAutoDownload] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
@@ -194,10 +193,9 @@ function SettingsPage() {
 
           {active === "notifications" && (
             <SectionCard title="Notification Settings" desc="Choose what updates you receive" icon={Bell}>
-              <Row title="SMS Notifications" desc="Booking & wallet updates via SMS"><Toggle on={sms} onChange={setSms} /></Row>
+              <Row title="SMS Notifications" desc="Booking updates via SMS"><Toggle on={sms} onChange={setSms} /></Row>
               <Row title="Email Notifications" desc="Daily reports & important alerts"><Toggle on={emailN} onChange={setEmailN} /></Row>
               <Row title="Booking Alerts" desc="Instant alerts for new bookings & cancellations"><Toggle on={bookingAlert} onChange={setBookingAlert} /></Row>
-              <Row title="Wallet Alerts" desc="Low balance warnings and payout updates"><Toggle on={walletAlert} onChange={setWalletAlert} /></Row>
             </SectionCard>
           )}
 
