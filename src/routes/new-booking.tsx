@@ -14,6 +14,7 @@ import {
   Ticket as TicketIcon,
   Trash2,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { AgentShell } from "@/components/AgentShell";
 import { BusSeatMap } from "@/components/booking/BusSeatMap";
@@ -32,6 +33,7 @@ import {
   rupees,
   SEATING_LABEL,
   todayInIndia,
+  ticketCode,
   type PassengerInput,
   type Seating,
   type Ticket,
@@ -603,7 +605,7 @@ function TicketView({ ticket, onNew }: { ticket: Ticket; onNew: () => void }) {
         </div>
       </div>
 
-      <section className={cardClass}>
+      <section className={`print-area ${cardClass}`}>
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-dashed border-border pb-4">
           <div>
             <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -664,8 +666,32 @@ function TicketView({ ticket, onNew }: { ticket: Ticket; onNew: () => void }) {
             </tr>
           </tfoot>
         </table>
+
+        {/* One code per passenger: the conductor scans it at boarding. */}
+        <div className="mt-4 grid gap-3 border-t border-dashed border-border pt-4 sm:grid-cols-2">
+          {ticket.bookings.map((b) => {
+            const code = ticketCode(ticket.pnr, b.seatNumber);
+            return (
+              <div
+                key={b.id}
+                className="flex items-center gap-3 rounded-xl border border-border p-3"
+              >
+                <QRCodeSVG value={code} size={88} level="M" />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-foreground">
+                    {b.passengerName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Seat {b.seatNumber}</div>
+                  <div className="mt-1 font-mono text-xs font-bold tracking-wider text-foreground">
+                    {code}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
         <p className="mt-3 text-[11px] text-muted-foreground">
-          Carry a valid ID proof while travelling.
+          Show this code to the conductor. Carry a valid ID proof while travelling.
         </p>
       </section>
 

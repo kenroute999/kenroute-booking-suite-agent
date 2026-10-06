@@ -321,6 +321,8 @@ function StatusPill({ status }: { status: Passenger["status"] }) {
 function PassengersPage() {
   const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
   // Real passengers first, then the sample rows.
+  // The sample totals stand in for history; real passengers are counted on top of them.
+  const realCount = useMemo(() => realPassengers(mine.data ?? []).length, [mine.data]);
   const PASSENGERS = useMemo(
     () => [...realPassengers(mine.data ?? []), ...SAMPLE_PASSENGERS],
     [mine.data],
@@ -356,9 +358,9 @@ function PassengersPage() {
       <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total Passengers" value="2,184" icon={Users} hint="All-time database" tone="blue" />
-          <StatCard label="Active Passengers" value="1,742" icon={UserCheck} hint="Travelled last 90 days" tone="green" />
-          <StatCard label="New This Month" value="138" icon={UserPlus} hint="+12% vs last month" tone="amber" />
+          <StatCard label="Total Passengers" value={(2184 + realCount).toLocaleString("en-IN")} icon={Users} hint="All-time database" tone="blue" />
+          <StatCard label="Active Passengers" value={(1742 + realCount).toLocaleString("en-IN")} icon={UserCheck} hint="Travelled last 90 days" tone="green" />
+          <StatCard label="New This Month" value={String(138 + realCount)} icon={UserPlus} hint="+12% vs last month" tone="amber" />
           <StatCard label="Repeat Customers" value="68%" icon={Repeat} hint="2+ trips lifetime" />
         </div>
 

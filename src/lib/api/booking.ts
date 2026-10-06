@@ -192,6 +192,54 @@ const SOURCE_NAME = {
   OTA: "Agent",
 } as const;
 
+/**
+ * What a ticket's QR code holds: the PNR plus the seat, so every ticket in a group
+ * booking is different. It carries no personal details. The conductor app looks
+ * this code up in its passenger list.
+ */
+export const ticketCode = (pnr: string, seat: string) => `${pnr}-${seat}`;
+
+export const cancelBooking = (bookingId: string) =>
+  api<{ id: string; status: string }>(`/booking/bookings/${bookingId}/cancel`, { method: "POST" });
+
+type Shareable = {
+  pnr: string;
+  passenger: string;
+  route: string;
+  date: string;
+  departure: string;
+  bus: string;
+  seat: string;
+  boarding: string;
+  fare: number;
+};
+
+function ticketText(t: Shareable) {
+  return [
+    `KenRoute e-ticket`,
+    `PNR: ${t.pnr}`,
+    `Passenger: ${t.passenger}`,
+    `${t.route}`,
+    `${t.date}, ${t.departure}`,
+    `Bus: ${t.bus} | Seat: ${t.seat}`,
+    `Boarding: ${t.boarding}`,
+    `Fare: Rs ${t.fare}`,
+    `Carry a valid ID proof while travelling.`,
+  ].join("\n");
+}
+
+/** Opens WhatsApp with the ticket typed out, addressed to the passenger when their number is known. */
+export function whatsappLink(t: Shareable & { mobile: string }) {
+  const digits = t.mobile.replace(/\D/g, "");
+  return `https://wa.me/${digits.length >= 10 ? digits : ""}?text=${encodeURIComponent(ticketText(t))}`;
+}
+
+/** Opens the mail app with the ticket typed out. */
+export function mailLink(t: Shareable & { email: string }) {
+  const to = t.email.includes("@") ? t.email : "";
+  return `mailto:${to}?subject=${encodeURIComponent(`Your KenRoute ticket ${t.pnr}`)}&body=${encodeURIComponent(ticketText(t))}`;
+}
+
 /** A booking laid out the way the list screens show one row. */
 export function bookingView(b: MyBooking) {
   const { origin, destination } = b.trip.route;
@@ -199,6 +247,8 @@ export function bookingView(b: MyBooking) {
   const arrival = clock(b.trip.arrivalAt);
   const phone = b.passenger?.phone ?? "";
   return {
+    bookingId: b.id,
+    qr: ticketCode(b.pnr, b.seatNumber),
     ticketNo: `TKT${b.id.slice(0, 6).toUpperCase()}`,
     pnr: b.pnr,
     passenger: b.passenger?.name ?? "—",

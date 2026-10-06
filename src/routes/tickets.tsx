@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { bookingView, listMyBookings, myBookingsKey, type MyBooking } from "@/lib/api/booking";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
+import { toast } from "sonner";
+import { errorMessage } from "@/lib/api/client";
+import {
+  bookingView,
+  cancelBooking,
+  listMyBookings,
+  mailLink,
+  myBookingsKey,
+  whatsappLink,
+  type MyBooking,
+} from "@/lib/api/booking";
 import { AgentShell } from "@/components/AgentShell";
 import {
   Search,
@@ -17,7 +28,6 @@ import {
   TicketCheck,
   Ban,
   RotateCw,
-  QrCode,
   MapPin,
   User,
   CreditCard,
@@ -64,6 +74,10 @@ type TicketRow = {
   issuedAt: string;
   /** Real bookings carry their source; sample rows fall back to a derived one. */
   source?: BookingSource;
+  /** Set on real bookings only; sample rows cannot be cancelled. */
+  bookingId?: string;
+  /** What the ticket's QR code holds. */
+  qr?: string;
 };
 
 const SAMPLE_TICKETS: TicketRow[] = [
@@ -189,6 +203,39 @@ function TicketsPage() {
   const [selected, setSelected] = useState<TicketRow | null>(null);
   const [reprintQuery, setReprintQuery] = useState("");
   const [reprintMode, setReprintMode] = useState<"mobile" | "pnr">("mobile");
+
+  const queryClient = useQueryClient();
+  const cancel = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      toast.success("Ticket cancelled. The seat is back on sale.");
+      setSelected(null);
+      return queryClient.invalidateQueries({ queryKey: ["booking"] });
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  const actions: TicketActions = {
+    // The e-ticket lives in the drawer, so open it and print once it is on screen.
+    // "Download PDF" is the same dialog: choose "Save as PDF" as the printer.
+    print: (t) => {
+      setSelected(t);
+      window.setTimeout(() => window.print(), 200);
+    },
+    whatsapp: (t) => window.open(whatsappLink(t), "_blank", "noopener"),
+    email: (t) => {
+      window.location.href = mailLink(t);
+    },
+    cancel: (t) => {
+      if (!t.bookingId) {
+        toast.info("This is a sample ticket, so there is nothing to cancel.");
+        return;
+      }
+      if (window.confirm(`Cancel the ticket for ${t.passenger}, seat ${t.seat}? This cannot be undone.`)) {
+        cancel.mutate(t.bookingId);
+      }
+    },
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -475,21 +522,23 @@ function TicketsPage() {
                       <IconBtn title="View Ticket" tone="primary" onClick={() => setSelected(t)}>
                         <Eye className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Reprint">
+                      <IconBtn title="Reprint" onClick={() => actions.print(t)}>
                         <Printer className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Download PDF">
+                      <IconBtn title="Download PDF" onClick={() => actions.print(t)}>
                         <Download className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Share via WhatsApp" tone="whatsapp">
+                      <IconBtn title="Share via WhatsApp" tone="whatsapp" onClick={() => actions.whatsapp(t)}>
                         <MessageCircle className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Send via Email">
+                      <IconBtn title="Send via Email" onClick={() => actions.email(t)}>
                         <Mail className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Cancel Ticket" tone="danger">
-                        <XCircle className="h-4 w-4" />
-                      </IconBtn>
+                      {t.status === "Active" && (
+                        <IconBtn title="Cancel Ticket" tone="danger" onClick={() => actions.cancel(t)}>
+                          <XCircle className="h-4 w-4" />
+                        </IconBtn>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -563,12 +612,24 @@ function TicketsPage() {
 
 
 
-      {selected && <TicketDrawer ticket={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <TicketDrawer ticket={selected} actions={actions} onClose={() => setSelected(null)} />
+      )}
     </AgentShell>
   );
 }
 
-function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => void }) {
+type TicketActions = Record<"print" | "whatsapp" | "email" | "cancel", (t: TicketRow) => void>;
+
+function TicketDrawer({
+  ticket,
+  actions,
+  onClose,
+}: {
+  ticket: TicketRow;
+  actions: TicketActions;
+  onClose: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -588,7 +649,7 @@ function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => v
 
         <div className="flex-1 overflow-y-auto p-5">
           {/* E-Ticket */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-md">
+          <div className="print-area overflow-hidden rounded-2xl border border-border bg-white shadow-md">
             <div className="flex items-center justify-between bg-gradient-to-r from-navy to-navy/90 px-5 py-4 text-white">
               <div>
                 <div className="text-[10px] uppercase tracking-widest text-white/60">KenRoute</div>
@@ -634,8 +695,13 @@ function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => v
                 <div className="text-sm font-bold text-foreground">{ticket.passenger}</div>
                 <div className="text-[11px] text-muted-foreground">{ticket.mobile}</div>
               </div>
-              <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-border bg-white">
-                <QrCode className="h-20 w-20 text-navy" />
+              <div className="flex flex-col items-center gap-1">
+                <div className="rounded-lg border border-border bg-white p-1.5">
+                  <QRCodeSVG value={ticket.qr ?? ticket.pnr} size={84} level="M" />
+                </div>
+                <div className="font-mono text-[10px] font-semibold text-muted-foreground">
+                  {ticket.qr ?? ticket.pnr}
+                </div>
               </div>
             </div>
 
@@ -667,22 +733,44 @@ function TicketDrawer({ ticket, onClose }: { ticket: TicketRow; onClose: () => v
         </div>
 
         <div className="grid grid-cols-2 gap-2 border-t border-border bg-card p-4">
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green/90">
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green/90"
+          >
             <Printer className="h-4 w-4" />
             Reprint
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+          <button
+            onClick={() => window.print()}
+            title="Choose 'Save as PDF' in the print dialog"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
             <Download className="h-4 w-4" />
             Download PDF
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100">
+          <button
+            onClick={() => actions.whatsapp(ticket)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+          >
             <MessageCircle className="h-4 w-4" />
             WhatsApp
           </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+          <button
+            onClick={() => actions.email(ticket)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
             <Mail className="h-4 w-4" />
             Email
           </button>
+          {ticket.status === "Active" && (
+            <button
+              onClick={() => actions.cancel(ticket)}
+              className="col-span-2 inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              <XCircle className="h-4 w-4" />
+              Cancel Ticket
+            </button>
+          )}
         </div>
       </aside>
     </div>
