@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { errorMessage } from "@/lib/api/client";
+import { downloadCsv } from "@/lib/csv";
 import {
   bookingView,
   cancelBooking,
@@ -461,48 +462,12 @@ function BookingHistoryPage() {
   };
 
   // Everything the filters currently show, as a spreadsheet file.
-  const exportCsv = () => {
-    const header = [
-      "Booking ID",
-      "Ticket No",
-      "Passenger",
-      "Mobile",
-      "Route",
-      "Seat",
-      "Journey Date",
-      "Departure",
-      "Bus",
-      "Amount",
-      "Payment",
-      "Status",
-    ];
-    const lines = filtered.map((b) =>
-      [
-        b.id,
-        b.ticketNo,
-        b.passenger,
-        b.mobile,
-        b.route,
-        b.seat,
-        b.date,
-        b.departure,
-        b.bus,
-        b.amount,
-        b.payment,
-        b.status,
-      ]
-        .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
-        .join(","),
+  const exportCsv = () =>
+    downloadCsv(
+      "kenroute-bookings.csv",
+      ["Booking ID", "Ticket No", "Passenger", "Mobile", "Route", "Seat", "Journey Date", "Departure", "Bus", "Amount", "Payment", "Status"],
+      filtered.map((b) => [b.id, b.ticketNo, b.passenger, b.mobile, b.route, b.seat, b.date, b.departure, b.bus, b.amount, b.payment, b.status]),
     );
-    const url = URL.createObjectURL(
-      new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "kenroute-bookings.csv";
-    link.click();
-    URL.revokeObjectURL(url);
-  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
