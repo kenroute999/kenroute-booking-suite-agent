@@ -8,6 +8,8 @@ interface Props {
   onToggle: (id: string) => void;
 }
 
+const isBed = (seat: TripSeat) => seat.seatType.includes("SLEEPER");
+
 function seatClass(seat: TripSeat, isSelected: boolean) {
   if (isSelected) return "bg-seat-selected/30 ring-2 ring-seat-selected text-amber-900";
   if (seat.status === "AVAILABLE") {
@@ -22,20 +24,31 @@ function seatClass(seat: TripSeat, isSelected: boolean) {
 }
 
 function seatTitle(seat: TripSeat) {
+  const kind =
+    seat.seatType === "DOUBLE_SLEEPER" ? "Double bed" : isBed(seat) ? "Single bed" : "Seat";
+  const what = `${kind} ${seat.seatNumber}`;
   if (seat.status === "AVAILABLE") {
-    return `Seat ${seat.seatNumber} · Available · ₹${Number(seat.fare).toLocaleString("en-IN")}`;
+    return `${what} · Available · ₹${Number(seat.fare).toLocaleString("en-IN")}`;
   }
-  if (seat.status === "BOOKED") return `Seat ${seat.seatNumber} · Booked`;
-  if (seat.status === "HELD") return `Seat ${seat.seatNumber} · Being booked by another agent`;
-  return `Seat ${seat.seatNumber} · Blocked`;
+  if (seat.status === "BOOKED") return `${what} · Booked`;
+  if (seat.status === "HELD") return `${what} · Being booked by another agent`;
+  return `${what} · Blocked`;
 }
 
 /**
- * One deck of the bus, drawn from each seat's position in the owner's layout.
- * The bus is shown lengthwise: `row` runs front to back (left to right here),
- * `col` runs across its width. A missing position is the aisle.
+ * One deck of the bus, drawn from the layout the owner set for it in Admin.
+ * The bus is shown lengthwise with the driver on the left: a seat's `row` runs
+ * front to back (left to right here) and its `col` runs across the width. A
+ * column with no seats is the aisle. A bed is as long as two seats, so beds and
+ * seats on the same deck line up the way they do in the bus.
  */
 export function BusSeatMap({ deckLabel, seats, selected, onToggle }: Props) {
+  const widest = Math.max(0, ...seats.map((s) => s.col));
+  const used = new Set(seats.map((s) => s.col));
+  const tracks = Array.from({ length: widest + 1 }, (_, col) =>
+    used.has(col) ? "3.25rem" : "0.9rem",
+  );
+
   return (
     <div className="relative rounded-3xl border-2 border-slate-300 bg-gradient-to-b from-slate-50 to-white p-5 shadow-inner">
       <div className="flex gap-4">
@@ -55,10 +68,14 @@ export function BusSeatMap({ deckLabel, seats, selected, onToggle }: Props) {
         </div>
 
         <div className="min-w-0 flex-1 overflow-x-auto pb-1">
-          <div className="grid auto-cols-[4rem] grid-flow-col auto-rows-[3.5rem] gap-2">
+          <div
+            className="grid auto-cols-[2.5rem] grid-flow-col gap-1.5"
+            style={{ gridTemplateRows: tracks.join(" ") }}
+          >
             {seats.map((seat) => {
               const isSelected = selected.includes(seat.id);
               const clickable = seat.status === "AVAILABLE" || isSelected;
+              const bed = isBed(seat);
               return (
                 <button
                   key={seat.id}
@@ -67,16 +84,28 @@ export function BusSeatMap({ deckLabel, seats, selected, onToggle }: Props) {
                   title={seatTitle(seat)}
                   aria-pressed={isSelected}
                   onClick={() => onToggle(seat.id)}
-                  style={{ gridColumnStart: seat.row + 1, gridRowStart: seat.col + 1 }}
-                  className={`flex flex-col items-center justify-center rounded-lg text-xs font-semibold transition ${seatClass(seat, isSelected)}`}
+                  style={{
+                    gridColumn: bed ? `${seat.row * 2 + 1} / span 2` : `${seat.row + 1}`,
+                    gridRowStart: seat.col + 1,
+                  }}
+                  className={`relative flex flex-col items-center justify-center rounded-lg text-[11px] font-semibold leading-tight transition ${seatClass(seat, isSelected)}`}
                 >
+                  {/* A bed shows its pillow end; a seat shows its backrest. */}
+                  <span
+                    aria-hidden
+                    className={
+                      bed
+                        ? "absolute bottom-1.5 left-1 top-1.5 w-1.5 rounded-full bg-current opacity-25"
+                        : "absolute left-0.5 top-1 bottom-1 w-1 rounded-full bg-current opacity-20"
+                    }
+                  />
                   <span>{seat.seatNumber}</span>
+                  {isSelected && <Check className="mt-0.5 h-3.5 w-3.5" />}
                   {!isSelected && seat.status === "AVAILABLE" && (
                     <span className="text-[9px] font-medium opacity-70">
                       ₹{Number(seat.fare).toLocaleString("en-IN")}
                     </span>
                   )}
-                  {isSelected && <Check className="mt-0.5 h-3.5 w-3.5" />}
                   {!isSelected && seat.status === "BOOKED" && <User className="mt-0.5 h-3 w-3" />}
                   {!isSelected && (seat.status === "BLOCKED" || seat.status === "HELD") && (
                     <X className="mt-0.5 h-3 w-3" />
