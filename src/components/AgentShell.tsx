@@ -15,7 +15,6 @@ import {
   Settings,
   LogOut,
   Bell,
-  ChevronDown,
 } from "lucide-react";
 
 const navItems = [
@@ -47,7 +46,7 @@ export function AgentShell({ title, children }: { title: string; children: React
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex print:!hidden">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex print:!hidden">
         <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
           <img src={logo} alt="KenRoute" className="h-10 w-auto rounded-md bg-white p-1" />
           <div className="leading-tight">
@@ -106,7 +105,6 @@ export function AgentShell({ title, children }: { title: string; children: React
                 <div className="text-sm font-semibold text-foreground">{displayName}</div>
                 <div className="text-[11px] text-muted-foreground">{agentLine}</div>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
           </div>
         </header>

@@ -21,7 +21,7 @@ export interface TripOption {
   id: string;
   departureAt: string;
   arrivalAt: string;
-  /** Decimal string, per seat. */
+  /** Lowest seat fare on the trip, as a decimal string. */
   fare: string;
   route: RouteOption;
   bus: { registrationNo: string; name: string | null; isAc: boolean; seating: Seating };
@@ -39,6 +39,8 @@ export interface TripSeat {
   status: "AVAILABLE" | "HELD" | "BOOKED" | "BLOCKED";
   /** Set for booked seats only; used for the seat colour. */
   passengerGender: "MALE" | "FEMALE" | "OTHER" | null;
+  /** What this seat costs on this trip, as a decimal string. */
+  fare: string;
 }
 
 export const ID_PROOFS = [

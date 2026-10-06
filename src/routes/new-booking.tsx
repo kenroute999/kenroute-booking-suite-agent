@@ -198,7 +198,8 @@ function NewBooking() {
   const seatById = new Map(seats.map((s) => [s.id, s]));
   // A seat someone else booked since it was picked drops out of the selection.
   const chosen = selected.filter((id) => seatById.get(id)?.status === "AVAILABLE");
-  const total = trip ? Number(trip.fare) * chosen.length : 0;
+  // Sleeper and seater berths on one bus cost different amounts, so add up each seat's own fare.
+  const total = chosen.reduce((sum, id) => sum + Number(seatById.get(id)?.fare ?? 0), 0);
   const commissionPct = Number(me.data?.commissionPct ?? 0);
 
   return (
@@ -309,7 +310,10 @@ function NewBooking() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-base font-bold text-foreground">{rupees(t.fare)}</div>
+                      <div className="text-base font-bold text-foreground">
+                        <span className="text-[11px] font-medium text-muted-foreground">from </span>
+                        {rupees(t.fare)}
+                      </div>
                       <div
                         className={`text-[11px] font-medium ${full ? "text-rose-600" : "text-emerald-700"}`}
                       >
@@ -546,7 +550,16 @@ function NewBooking() {
                       chosen.map((id) => seatById.get(id)?.seatNumber).join(", ") || "None selected"
                     }
                   />
-                  <SummaryRow label="Fare per seat" value={rupees(trip.fare)} />
+                  {chosen.map((id) => {
+                    const seat = seatById.get(id);
+                    return seat ? (
+                      <SummaryRow
+                        key={id}
+                        label={`Seat ${seat.seatNumber}`}
+                        value={rupees(seat.fare)}
+                      />
+                    ) : null;
+                  })}
                 </dl>
                 <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                   <span className="text-sm font-medium">Total to collect</span>
