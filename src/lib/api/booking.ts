@@ -39,6 +39,8 @@ export interface TripSeat {
   status: "AVAILABLE" | "HELD" | "BOOKED" | "BLOCKED";
   /** Set for booked seats only; used for the seat colour. */
   passengerGender: "MALE" | "FEMALE" | "OTHER" | null;
+  /** A free seat beside a booked one is kept for a passenger of the same gender. */
+  reservedFor: "MALE" | "FEMALE" | null;
   /** What this seat costs on this trip, as a decimal string. */
   fare: string;
 }

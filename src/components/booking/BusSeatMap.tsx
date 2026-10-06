@@ -12,6 +12,12 @@ const isBed = (seat: TripSeat) => seat.seatType.includes("SLEEPER");
 
 function seatClass(seat: TripSeat, isSelected: boolean) {
   if (isSelected) return "bg-seat-selected/30 ring-2 ring-seat-selected text-amber-900";
+  // Free, but beside a booked seat: only a passenger of the same gender may take it.
+  if (seat.status === "AVAILABLE" && seat.reservedFor) {
+    return seat.reservedFor === "FEMALE"
+      ? "bg-seat-female/10 outline-2 outline-dashed outline-seat-female/70 text-pink-900 hover:bg-seat-female/20"
+      : "bg-seat-male/10 outline-2 outline-dashed outline-seat-male/70 text-blue-900 hover:bg-seat-male/20";
+  }
   if (seat.status === "AVAILABLE") {
     return "bg-seat-available/25 ring-1 ring-seat-available/60 text-emerald-900 hover:ring-2 hover:ring-seat-available";
   }
@@ -28,7 +34,10 @@ function seatTitle(seat: TripSeat) {
     seat.seatType === "DOUBLE_SLEEPER" ? "Double bed" : isBed(seat) ? "Single bed" : "Seat";
   const what = `${kind} ${seat.seatNumber}`;
   if (seat.status === "AVAILABLE") {
-    return `${what} · Available · ₹${Number(seat.fare).toLocaleString("en-IN")}`;
+    const only = seat.reservedFor
+      ? ` · ${seat.reservedFor === "FEMALE" ? "Female" : "Male"} passenger only`
+      : "";
+    return `${what} · Available${only} · ₹${Number(seat.fare).toLocaleString("en-IN")}`;
   }
   if (seat.status === "BOOKED") return `${what} · Booked`;
   if (seat.status === "HELD") return `${what} · Being booked by another agent`;
@@ -99,7 +108,12 @@ export function BusSeatMap({ deckLabel, seats, selected, onToggle }: Props) {
                         : "absolute left-0.5 top-1 bottom-1 w-1 rounded-full bg-current opacity-20"
                     }
                   />
-                  <span>{seat.seatNumber}</span>
+                  <span>
+                    {seat.seatNumber}
+                    {seat.status === "AVAILABLE" &&
+                      seat.reservedFor &&
+                      (seat.reservedFor === "FEMALE" ? " ♀" : " ♂")}
+                  </span>
                   {isSelected && <Check className="mt-0.5 h-3.5 w-3.5" />}
                   {!isSelected && seat.status === "AVAILABLE" && (
                     <span className="text-[9px] font-medium opacity-70">
