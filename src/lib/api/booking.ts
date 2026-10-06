@@ -133,3 +133,92 @@ export const rupees = (amount: string | number) =>
 
 /** Today's date in India as YYYY-MM-DD, for date inputs. */
 export const todayInIndia = () => new Date().toLocaleDateString("en-CA", { timeZone: IST });
+
+// --- The agent's own bookings, for Tickets, Booking History and Passengers ---
+
+export interface MyBooking {
+  id: string;
+  pnr: string;
+  status: "CREATED" | "CONFIRMED" | "BOARDED" | "COMPLETED" | "CANCELLED" | "REFUNDED";
+  source: "AGENT" | "COUNTER" | "PHONE" | "CORPORATE" | "OTA";
+  fare: string;
+  paymentMode: "CASH" | "UPI" | null;
+  boardingPoint: string | null;
+  droppingPoint: string | null;
+  createdAt: string;
+  seatNumber: string;
+  trip: {
+    departureAt: string;
+    arrivalAt: string;
+    route: { origin: string; destination: string };
+    bus: { registrationNo: string; name: string | null };
+  };
+  passenger: {
+    name: string;
+    age: number | null;
+    gender: "MALE" | "FEMALE" | "OTHER" | null;
+    phone: string;
+  } | null;
+}
+
+export const myBookingsKey = ["booking", "mine"] as const;
+
+export const listMyBookings = () =>
+  api<{ items: MyBooking[] }>("/booking/bookings").then((r) => r.items);
+
+const shortDateFmt = new Intl.DateTimeFormat("en-GB", {
+  timeZone: IST,
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+const clockFmt = new Intl.DateTimeFormat("en-GB", {
+  timeZone: IST,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+/** "07 Oct 2026" */
+export const shortDate = (iso: string) => shortDateFmt.format(new Date(iso));
+/** "20:00" */
+export const clock = (iso: string) => clockFmt.format(new Date(iso));
+
+const SOURCE_NAME = {
+  AGENT: "Agent",
+  COUNTER: "Counter",
+  PHONE: "Phone",
+  CORPORATE: "Corporate",
+  OTA: "Agent",
+} as const;
+
+/** A booking laid out the way the list screens show one row. */
+export function bookingView(b: MyBooking) {
+  const { origin, destination } = b.trip.route;
+  const departure = clock(b.trip.departureAt);
+  const arrival = clock(b.trip.arrivalAt);
+  const phone = b.passenger?.phone ?? "";
+  return {
+    ticketNo: `TKT${b.id.slice(0, 6).toUpperCase()}`,
+    pnr: b.pnr,
+    passenger: b.passenger?.name ?? "—",
+    gender: b.passenger?.gender === "FEMALE" ? ("F" as const) : ("M" as const),
+    age: b.passenger?.age ?? 0,
+    phone,
+    mobile: phone ? `+91 ${phone.slice(0, 5)} ${phone.slice(5)}` : "—",
+    route: `${origin} → ${destination}`,
+    from: origin,
+    to: destination,
+    boarding: `${b.boardingPoint ?? origin} · ${departure}`,
+    dropping: `${b.droppingPoint ?? destination} · ${arrival}`,
+    seat: b.seatNumber,
+    date: shortDate(b.trip.departureAt),
+    bus: b.trip.bus.registrationNo,
+    departure,
+    arrival,
+    amount: Number(b.fare),
+    issuedAt: `${shortDate(b.createdAt)} · ${clock(b.createdAt)}`,
+    source: SOURCE_NAME[b.source],
+    status: b.status,
+  };
+}

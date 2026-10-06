@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { bookingView, listMyBookings, myBookingsKey, type MyBooking } from "@/lib/api/booking";
 import { AgentShell } from "@/components/AgentShell";
 import {
   Search,
@@ -60,9 +62,11 @@ type TicketRow = {
   fare: number;
   status: TicketStatus;
   issuedAt: string;
+  /** Real bookings carry their source; sample rows fall back to a derived one. */
+  source?: BookingSource;
 };
 
-const TICKETS: TicketRow[] = [
+const SAMPLE_TICKETS: TicketRow[] = [
   { ticketNo: "TKT784512", pnr: "PNR8842051", passenger: "Ravi Kumar", gender: "M", mobile: "+91 98765 43210", email: "ravi.k@mail.com", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-12", date: "30 May 2026", bus: "KR-1024", departure: "21:30", arrival: "06:45", fare: 1450, status: "Active", issuedAt: "30 May 2026 · 14:22" },
   { ticketNo: "TKT784511", pnr: "PNR8842050", passenger: "Priya Sharma", gender: "F", mobile: "+91 98220 11234", email: "priya.s@mail.com", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-08", date: "30 May 2026", bus: "KR-2218", departure: "22:00", arrival: "05:30", fare: 980, status: "Active", issuedAt: "30 May 2026 · 13:08" },
   { ticketNo: "TKT784510", pnr: "PNR8842049", passenger: "Anand Reddy", gender: "M", mobile: "+91 99887 76655", email: "anand.r@mail.com", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-04", date: "29 May 2026", bus: "KR-3340", departure: "23:15", arrival: "04:45", fare: 650, status: "Used", issuedAt: "29 May 2026 · 18:55" },
@@ -76,6 +80,20 @@ const TICKETS: TicketRow[] = [
 ];
 
 const PAGE_SIZE = 8;
+
+const TICKET_STATUS: Record<MyBooking["status"], TicketStatus> = {
+  CREATED: "Active",
+  CONFIRMED: "Active",
+  BOARDED: "Used",
+  COMPLETED: "Used",
+  CANCELLED: "Cancelled",
+  REFUNDED: "Cancelled",
+};
+
+function toTicketRow(b: MyBooking): TicketRow {
+  const v = bookingView(b);
+  return { ...v, email: "—", fare: v.amount, status: TICKET_STATUS[b.status] };
+}
 
 function StatusPill({ status }: { status: TicketStatus }) {
   const map: Record<TicketStatus, string> = {
@@ -157,6 +175,12 @@ function IconBtn({
 }
 
 function TicketsPage() {
+  const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
+  // Real bookings first, then the sample rows.
+  const TICKETS = useMemo(
+    () => [...(mine.data ?? []).map(toTicketRow), ...SAMPLE_TICKETS],
+    [mine.data],
+  );
   const [query, setQuery] = useState("");
   const [searchField, setSearchField] = useState<"all" | "pnr" | "ticket" | "mobile" | "name">("all");
   const [status, setStatus] = useState<"All" | TicketStatus>("All");
@@ -170,7 +194,7 @@ function TicketsPage() {
     const q = query.trim().toLowerCase();
     return TICKETS.filter((t) => {
       if (status !== "All" && t.status !== status) return false;
-      if (sourceFilter !== "All" && sourceFor(t.ticketNo) !== sourceFilter) return false;
+      if (sourceFilter !== "All" && (t.source ?? sourceFor(t.ticketNo)) !== sourceFilter) return false;
       if (!q) return true;
       const map = {
         all: `${t.ticketNo} ${t.pnr} ${t.passenger} ${t.mobile}`,
@@ -181,7 +205,7 @@ function TicketsPage() {
       } as const;
       return map[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, status, sourceFilter]);
+  }, [query, searchField, status, sourceFilter, TICKETS]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -193,19 +217,19 @@ function TicketsPage() {
     const cancelled = TICKETS.filter((t) => t.status === "Cancelled").length;
     const reprinted = TICKETS.filter((t) => t.status === "Reprinted").length;
     return { active, today, cancelled, reprinted };
-  }, []);
+  }, [TICKETS]);
 
   const sourceStats: SourceStat[] = useMemo(
     () =>
       BOOKING_SOURCES.map((src) => {
-        const rows = TICKETS.filter((t) => sourceFor(t.ticketNo) === src);
+        const rows = TICKETS.filter((t) => (t.source ?? sourceFor(t.ticketNo)) === src);
         return {
           source: src,
           count: rows.length,
           revenue: rows.reduce((s, t) => s + t.fare, 0),
         };
       }),
-    [],
+    [TICKETS],
   );
 
   const reprintMatch = useMemo(() => {
@@ -214,7 +238,7 @@ function TicketsPage() {
     return TICKETS.filter((t) =>
       (reprintMode === "mobile" ? t.mobile : t.pnr).toLowerCase().includes(q),
     ).slice(0, 3);
-  }, [reprintQuery, reprintMode]);
+  }, [reprintQuery, reprintMode, TICKETS]);
 
   return (
     <AgentShell title="Tickets Management">
@@ -416,7 +440,7 @@ function TicketsPage() {
                     </button>
                     <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
                       <span>Issued {t.issuedAt}</span>
-                      <SourceBadge source={sourceFor(t.ticketNo)} />
+                      <SourceBadge source={(t.source ?? sourceFor(t.ticketNo))} />
                     </div>
                   </td>
                   <td className="px-3 py-3 font-mono text-[12px] font-semibold text-foreground">{t.pnr}</td>

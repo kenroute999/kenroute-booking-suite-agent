@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { bookingView, listMyBookings, myBookingsKey, type MyBooking } from "@/lib/api/booking";
 import { AgentShell } from "@/components/AgentShell";
 import {
   Search,
@@ -44,7 +46,53 @@ type Passenger = {
   history: { date: string; route: string; bus: string; seat: string; amount: number; status: string }[];
 };
 
-const PASSENGERS: Passenger[] = [
+const cityCode = (city: string) => city.slice(0, 3).toUpperCase();
+
+/** One passenger per mobile number, built from the agent's real bookings (newest first). */
+function realPassengers(bookings: MyBooking[]): Passenger[] {
+  const byPhone = new Map<string, ReturnType<typeof bookingView>[]>();
+  for (const b of bookings) {
+    if (!b.passenger) continue;
+    const v = bookingView(b);
+    byPhone.set(v.phone, [...(byPhone.get(v.phone) ?? []), v]);
+  }
+  return [...byPhone.values()].flatMap((trips) => {
+    const latest = trips[0];
+    const first = trips[trips.length - 1];
+    if (!latest || !first) return [];
+    const routes = new Map<string, number>();
+    for (const t of trips) routes.set(t.route, (routes.get(t.route) ?? 0) + 1);
+    const paid = trips.filter((t) => t.status !== "CANCELLED" && t.status !== "REFUNDED");
+    return [
+      {
+        id: `PAX${latest.phone.slice(-5)}`,
+        name: latest.passenger,
+        mobile: latest.mobile,
+        email: "—",
+        gender: latest.gender,
+        age: latest.age,
+        city: latest.from,
+        trips: trips.length,
+        lastJourney: latest.date,
+        lastRoute: `${cityCode(latest.from)} → ${cityCode(latest.to)}`,
+        status: "Active" as const,
+        totalSpend: paid.reduce((sum, t) => sum + t.amount, 0),
+        joinedOn: first.issuedAt.split(" · ")[0] ?? first.date,
+        topRoutes: [...routes].map(([route, count]) => ({ route, trips: count })),
+        history: trips.map((t) => ({
+          date: t.date,
+          route: `${cityCode(t.from)} → ${cityCode(t.to)}`,
+          bus: t.bus,
+          seat: t.seat,
+          amount: t.amount,
+          status: t.status.charAt(0) + t.status.slice(1).toLowerCase(),
+        })),
+      },
+    ];
+  });
+}
+
+const SAMPLE_PASSENGERS: Passenger[] = [
   {
     id: "PAX10231",
     name: "Ravi Kumar",
@@ -271,6 +319,12 @@ function StatusPill({ status }: { status: Passenger["status"] }) {
 }
 
 function PassengersPage() {
+  const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
+  // Real passengers first, then the sample rows.
+  const PASSENGERS = useMemo(
+    () => [...realPassengers(mine.data ?? []), ...SAMPLE_PASSENGERS],
+    [mine.data],
+  );
   const [query, setQuery] = useState("");
   const [field, setField] = useState<"all" | "name" | "mobile" | "id">("all");
   const [statusFilter, setStatusFilter] = useState<"All" | Passenger["status"]>("All");
@@ -292,7 +346,7 @@ function PassengersPage() {
         p.id.toLowerCase().includes(q)
       );
     });
-  }, [query, field, statusFilter]);
+  }, [query, field, statusFilter, PASSENGERS]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);

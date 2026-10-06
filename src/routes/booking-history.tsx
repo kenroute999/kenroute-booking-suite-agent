@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { bookingView, listMyBookings, myBookingsKey, type MyBooking } from "@/lib/api/booking";
 import { AgentShell } from "@/components/AgentShell";
 import {
   Search,
@@ -58,6 +60,8 @@ type Booking = {
   amount: number;
   payment: PaymentStatus;
   status: BookingStatus;
+  /** Real bookings carry their source; sample rows fall back to a derived one. */
+  source?: BookingSource;
 };
 
 const ROUTES = [
@@ -69,7 +73,25 @@ const ROUTES = [
   "Bangalore → Mumbai",
 ];
 
-const BOOKINGS: Booking[] = [
+const BOOKING_STATUS: Record<MyBooking["status"], BookingStatus> = {
+  CREATED: "Pending",
+  CONFIRMED: "Confirmed",
+  BOARDED: "Completed",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+  REFUNDED: "Cancelled",
+};
+
+function toBookingRow(b: MyBooking): Booking {
+  return {
+    ...bookingView(b),
+    id: b.pnr,
+    payment: b.status === "REFUNDED" ? "Refunded" : "Paid",
+    status: BOOKING_STATUS[b.status],
+  };
+}
+
+const SAMPLE_BOOKINGS: Booking[] = [
   { id: "KR-2026-10481", ticketNo: "TKT784512", passenger: "Ravi Kumar", gender: "M", mobile: "+91 98765 43210", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-12", date: "30 May 2026", bus: "KR-1024", departure: "21:30", amount: 1450, payment: "Paid", status: "Confirmed" },
   { id: "KR-2026-10480", ticketNo: "TKT784511", passenger: "Priya Sharma", gender: "F", mobile: "+91 98220 11234", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-08", date: "30 May 2026", bus: "KR-2218", departure: "22:00", amount: 980, payment: "Paid", status: "Confirmed" },
   { id: "KR-2026-10479", ticketNo: "TKT784510", passenger: "Anand Reddy", gender: "M", mobile: "+91 99887 76655", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-04", date: "29 May 2026", bus: "KR-3340", departure: "23:15", amount: 650, payment: "Paid", status: "Completed" },
@@ -152,6 +174,12 @@ function StatCard({
 }
 
 function BookingHistoryPage() {
+  const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
+  // Real bookings first, then the sample rows.
+  const BOOKINGS = useMemo(
+    () => [...(mine.data ?? []).map(toBookingRow), ...SAMPLE_BOOKINGS],
+    [mine.data],
+  );
   const [query, setQuery] = useState("");
   const [searchField, setSearchField] = useState<"all" | "id" | "name" | "mobile" | "ticket">("all");
   const [route, setRoute] = useState("All Routes");
@@ -168,7 +196,7 @@ function BookingHistoryPage() {
       if (route !== "All Routes" && b.route !== route) return false;
       if (bookingStatus !== "All" && b.status !== bookingStatus) return false;
       if (paymentStatus !== "All" && b.payment !== paymentStatus) return false;
-      if (sourceFilter !== "All" && sourceFor(b.id) !== sourceFilter) return false;
+      if (sourceFilter !== "All" && (b.source ?? sourceFor(b.id)) !== sourceFilter) return false;
       if (date && b.date !== date) return false;
       if (!q) return true;
       const fields: Record<typeof searchField, string> = {
@@ -180,7 +208,7 @@ function BookingHistoryPage() {
       };
       return fields[searchField].toLowerCase().includes(q);
     });
-  }, [query, searchField, route, date, bookingStatus, paymentStatus, sourceFilter]);
+  }, [query, searchField, route, date, bookingStatus, paymentStatus, sourceFilter, BOOKINGS]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -191,18 +219,18 @@ function BookingHistoryPage() {
     const cancelled = BOOKINGS.filter((b) => b.status === "Cancelled").length;
     const revenue = BOOKINGS.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0);
     return { total: BOOKINGS.length, confirmed, cancelled, revenue };
-  }, []);
+  }, [BOOKINGS]);
 
   const sourceStats: SourceStat[] = useMemo(() => {
     return BOOKING_SOURCES.map((src) => {
-      const rows = BOOKINGS.filter((b) => sourceFor(b.id) === src);
+      const rows = BOOKINGS.filter((b) => (b.source ?? sourceFor(b.id)) === src);
       return {
         source: src,
         count: rows.length,
         revenue: rows.filter((b) => b.payment === "Paid").reduce((s, b) => s + b.amount, 0),
       };
     });
-  }, []);
+  }, [BOOKINGS]);
 
   return (
     <AgentShell title="Booking History">
@@ -346,7 +374,7 @@ function BookingHistoryPage() {
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">{b.mobile}</td>
                   <td className="px-3 py-3 font-medium text-foreground">{b.route}</td>
-                  <td className="px-3 py-3"><SourceBadge source={sourceFor(b.id)} /></td>
+                  <td className="px-3 py-3"><SourceBadge source={(b.source ?? sourceFor(b.id))} /></td>
                   <td className="px-3 py-3 text-muted-foreground">{b.boarding}</td>
                   <td className="px-3 py-3">
                     <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-[12px] font-semibold text-foreground">
