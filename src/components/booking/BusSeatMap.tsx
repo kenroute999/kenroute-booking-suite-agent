@@ -22,7 +22,9 @@ function seatClass(seat: TripSeat, isSelected: boolean) {
 }
 
 function seatTitle(seat: TripSeat) {
-  if (seat.status === "AVAILABLE") return `Seat ${seat.seatNumber} · Available`;
+  if (seat.status === "AVAILABLE") {
+    return `Seat ${seat.seatNumber} · Available · ₹${Number(seat.fare).toLocaleString("en-IN")}`;
+  }
   if (seat.status === "BOOKED") return `Seat ${seat.seatNumber} · Booked`;
   if (seat.status === "HELD") return `Seat ${seat.seatNumber} · Being booked by another agent`;
   return `Seat ${seat.seatNumber} · Blocked`;
@@ -69,6 +71,11 @@ export function BusSeatMap({ deckLabel, seats, selected, onToggle }: Props) {
                   className={`flex flex-col items-center justify-center rounded-lg text-xs font-semibold transition ${seatClass(seat, isSelected)}`}
                 >
                   <span>{seat.seatNumber}</span>
+                  {!isSelected && seat.status === "AVAILABLE" && (
+                    <span className="text-[9px] font-medium opacity-70">
+                      ₹{Number(seat.fare).toLocaleString("en-IN")}
+                    </span>
+                  )}
                   {isSelected && <Check className="mt-0.5 h-3.5 w-3.5" />}
                   {!isSelected && seat.status === "BOOKED" && <User className="mt-0.5 h-3 w-3" />}
                   {!isSelected && (seat.status === "BLOCKED" || seat.status === "HELD") && (
