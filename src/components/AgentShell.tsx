@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ReactNode } from "react";
 import logo from "@/assets/kenroute-logo.png";
+import { sessionStore, useSession } from "@/lib/session";
 import {
   LayoutDashboard,
   TicketPlus,
@@ -31,6 +32,19 @@ const navItems = [
 ] as const;
 
 export function AgentShell({ title, children }: { title: string; children: ReactNode }) {
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const displayName = session?.user.name?.trim() || session?.user.email || "Agent";
+  const agentLine = session?.user.agentCode
+    ? `Agent ID: ${session.user.agentCode}`
+    : (session?.user.email ?? "");
+  const initial = (displayName.trim().charAt(0) || "A").toUpperCase();
+
+  async function handleLogout() {
+    sessionStore.logout();
+    await navigate({ to: "/login", replace: true });
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -72,7 +86,11 @@ export function AgentShell({ title, children }: { title: string; children: React
           <div className="mt-1 text-[11px] text-sidebar-foreground/60">Available for Booking</div>
         </div>
 
-        <button className="mx-3 mb-4 flex items-center gap-3 rounded-lg border border-sidebar-border px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-white/5 hover:text-white">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mx-3 mb-4 flex items-center gap-3 rounded-lg border border-sidebar-border px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-white/5 hover:text-white"
+        >
           <LogOut className="h-4 w-4" />
           Logout
         </button>
@@ -91,11 +109,11 @@ export function AgentShell({ title, children }: { title: string; children: React
             </button>
             <div className="flex items-center gap-3 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green text-sm font-bold text-white">
-                A
+                {initial}
               </div>
               <div className="leading-tight">
-                <div className="text-sm font-semibold text-foreground">Anil Agent</div>
-                <div className="text-[11px] text-muted-foreground">Agent ID: AGT1024</div>
+                <div className="text-sm font-semibold text-foreground">{displayName}</div>
+                <div className="text-[11px] text-muted-foreground">{agentLine}</div>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </div>
