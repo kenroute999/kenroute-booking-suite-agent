@@ -49,33 +49,34 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --shadow-card: 0 1px 2px 0 oklch(0.2 0.04 260 / 0.04), 0 1px 3px 0 oklch(0.2 0.04 260 / 0.06);
-  --shadow-elevated: 0 4px 16px -2px oklch(0.2 0.04 260 / 0.08), 0 2px 6px -1px oklch(0.2 0.04 260 / 0.05);
+  --shadow-elevated:
+    0 4px 16px -2px oklch(0.2 0.04 260 / 0.08), 0 2px 6px -1px oklch(0.2 0.04 260 / 0.05);
 }
 
 :root {
   --radius: 0.75rem;
 
   --background: oklch(0.985 0.005 250);
-  --foreground: oklch(0.20 0.04 260);
+  --foreground: oklch(0.2 0.04 260);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.04 260);
+  --card-foreground: oklch(0.2 0.04 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.04 260);
+  --popover-foreground: oklch(0.2 0.04 260);
 
-  --primary: oklch(0.62 0.18 142);          /* KenRoute green */
+  --primary: oklch(0.62 0.18 142); /* KenRoute green */
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.96 0.01 250);
   --secondary-foreground: oklch(0.22 0.04 260);
 
   --muted: oklch(0.96 0.01 250);
-  --muted-foreground: oklch(0.50 0.02 260);
+  --muted-foreground: oklch(0.5 0.02 260);
 
   --accent: oklch(0.95 0.02 142);
-  --accent-foreground: oklch(0.30 0.10 142);
+  --accent-foreground: oklch(0.3 0.1 142);
 
-  --destructive: oklch(0.60 0.22 25);
+  --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(1 0 0);
 
   --border: oklch(0.92 0.01 250);
@@ -84,14 +85,14 @@
 
   --navy: oklch(0.22 0.05 260);
   --navy-deep: oklch(0.16 0.05 260);
-  --brand-green: oklch(0.68 0.20 142);
+  --brand-green: oklch(0.68 0.2 142);
   --brand-green-dark: oklch(0.52 0.17 142);
 
   --seat-available: oklch(0.78 0.16 145);
   --seat-male: oklch(0.72 0.13 240);
   --seat-female: oklch(0.78 0.14 350);
   --seat-selected: oklch(0.82 0.16 90);
-  --seat-blocked: oklch(0.80 0.01 260);
+  --seat-blocked: oklch(0.8 0.01 260);
 
   --sidebar: oklch(0.16 0.05 260);
   --sidebar-foreground: oklch(0.92 0.01 250);
@@ -107,11 +108,48 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { font-family: var(--font-sans); }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-sans);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Printing a ticket: when a page marks one with .print-area, print only that. */
+@media print {
+  /* Everything that is neither the ticket nor a box around it is removed, so the page
+     behind does not print as extra sheets. */
+  body:has(.print-area) *:not(.print-area, .print-area *, :has(.print-area)) {
+    display: none !important;
+  }
+  /* The boxes around the ticket (page shell, pop-up) become plain, so a long ticket
+     can run on to a second sheet instead of being cut off or repeated. */
+  body:has(.print-area),
+  body:has(.print-area) *:has(.print-area) {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  body:has(.print-area) .print-area {
+    max-width: 30rem;
+    box-shadow: none;
   }
 }
