@@ -169,6 +169,11 @@ export interface MyBooking {
 
 export const myBookingsKey = ["booking", "mine"] as const;
 
+/** Everything this agent sold from the given day (YYYY-MM-DD, India) on: for dashboard and reports. */
+export const myBookingsSinceKey = (day: string) => [...myBookingsKey, "since", day] as const;
+export const listMyBookingsSince = (day: string) =>
+  api<{ items: MyBooking[] }>(`/booking/bookings?since=${day}`).then((r) => r.items);
+
 export const listMyBookings = () =>
   api<{ items: MyBooking[] }>("/booking/bookings").then((r) => r.items);
 

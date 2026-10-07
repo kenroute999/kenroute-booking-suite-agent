@@ -4,8 +4,8 @@ import type { SourceStat } from "@/components/booking-source";
 // Figures for the agent's Dashboard and Reports, added up from the agent's own bookings.
 // A ticket belongs to the day it was sold (India time). Cancelled tickets count as
 // cancelled, never as revenue or commission.
-// ponytail: works on the latest 200 bookings the server sends; move the sums to the
-// server when an agent sells more than that in the period they look at.
+// ponytail: the browser adds up every booking of the period (the server sends up to 5000);
+// move the sums to the server when an agent sells more than that in one period.
 
 const IST = "Asia/Kolkata";
 const DAY_MS = 86_400_000;

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { AgentShell } from "@/components/AgentShell";
 import {
   TicketCheck,
@@ -16,7 +16,13 @@ import {
 } from "lucide-react";
 import { SourceSummaryGrid, SourceBarComparison } from "@/components/booking-source";
 import { errorMessage } from "@/lib/api/client";
-import { listMyBookings, myBookingsKey, rupees, shortDate, todayInIndia } from "@/lib/api/booking";
+import {
+  listMyBookingsSince,
+  myBookingsSinceKey,
+  rupees,
+  shortDate,
+  todayInIndia,
+} from "@/lib/api/booking";
 import { daysBefore, summarize } from "@/lib/agent-stats";
 import { downloadCsv } from "@/lib/csv";
 
@@ -97,7 +103,12 @@ function ReportsPage() {
   const [to, setTo] = useState(today);
   const [route, setRoute] = useState("ALL");
 
-  const query = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
+  const since = from <= to ? from : to;
+  const query = useQuery({
+    queryKey: myBookingsSinceKey(since),
+    queryFn: () => listMyBookingsSince(since),
+    placeholderData: keepPreviousData,
+  });
   const all = useMemo(() => query.data ?? [], [query.data]);
   const routeNames = useMemo(
     () =>
