@@ -50,7 +50,12 @@ export function AgentShell({ title, children }: { title: string; children: React
         <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
           <img src={logo} alt="KenRoute" className="h-10 w-auto rounded-md bg-white p-1" />
           <div className="leading-tight">
-            <div className="text-base font-bold">KenRoute</div>
+            <div
+              className="max-w-[10.5rem] truncate text-base font-bold"
+              title={session?.user.operatorName}
+            >
+              {session?.user.operatorName?.trim() || "KenRoute"}
+            </div>
             <div className="text-[11px] text-sidebar-foreground/60">Agent Panel</div>
           </div>
         </div>
@@ -76,6 +81,9 @@ export function AgentShell({ title, children }: { title: string; children: React
           ))}
         </nav>
 
+        <div className="mx-3 mb-2 px-3 text-[11px] text-sidebar-foreground/50">
+          Provided by <span className="font-semibold text-sidebar-foreground/80">KenRoute</span>
+        </div>
         <button
           type="button"
           onClick={handleLogout}
