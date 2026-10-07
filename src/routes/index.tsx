@@ -22,8 +22,8 @@ import { SourceSummaryGrid, SourcePieChart } from "@/components/booking-source";
 import { useSession } from "@/lib/session";
 import {
   bookingView,
-  listMyBookings,
-  myBookingsKey,
+  listMyBookingsSince,
+  myBookingsSinceKey,
   rupees,
   todayInIndia,
   type MyBooking,
@@ -70,17 +70,21 @@ function ago(iso: string) {
 /* ---------- Component ---------- */
 function Dashboard() {
   const { session } = useSession();
+  const today = todayInIndia();
+  const monthStart = `${today.slice(0, 8)}01`;
+  const weekStart = daysBefore(today, 6);
+  // Far enough back for both "this month" and "last 7 days".
+  const since = monthStart < weekStart ? monthStart : weekStart;
   const query = useQuery({
-    queryKey: myBookingsKey,
-    queryFn: listMyBookings,
+    queryKey: myBookingsSinceKey(since),
+    queryFn: () => listMyBookingsSince(since),
     refetchInterval: 60_000,
   });
   const all = useMemo(() => query.data ?? [], [query.data]);
 
-  const today = todayInIndia();
   const day = useMemo(() => summarize(all, today, today), [all, today]);
-  const week = useMemo(() => summarize(all, daysBefore(today, 6), today), [all, today]);
-  const month = useMemo(() => summarize(all, `${today.slice(0, 8)}01`, today), [all, today]);
+  const week = useMemo(() => summarize(all, weekStart, today), [all, weekStart, today]);
+  const month = useMemo(() => summarize(all, monthStart, today), [all, monthStart, today]);
   const show = (value: string) => (query.isPending ? "—" : value);
 
   const stats = [
