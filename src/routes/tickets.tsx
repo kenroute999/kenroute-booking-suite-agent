@@ -72,26 +72,11 @@ type TicketRow = {
   fare: number;
   status: TicketStatus;
   issuedAt: string;
-  /** Real bookings carry their source; sample rows fall back to a derived one. */
   source?: BookingSource;
-  /** Set on real bookings only; sample rows cannot be cancelled. */
   bookingId?: string;
   /** What the ticket's QR code holds. */
   qr?: string;
 };
-
-const SAMPLE_TICKETS: TicketRow[] = [
-  { ticketNo: "TKT784512", pnr: "PNR8842051", passenger: "Ravi Kumar", gender: "M", mobile: "+91 98765 43210", email: "ravi.k@mail.com", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-12", date: "30 May 2026", bus: "KR-1024", departure: "21:30", arrival: "06:45", fare: 1450, status: "Active", issuedAt: "30 May 2026 · 14:22" },
-  { ticketNo: "TKT784511", pnr: "PNR8842050", passenger: "Priya Sharma", gender: "F", mobile: "+91 98220 11234", email: "priya.s@mail.com", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-08", date: "30 May 2026", bus: "KR-2218", departure: "22:00", arrival: "05:30", fare: 980, status: "Active", issuedAt: "30 May 2026 · 13:08" },
-  { ticketNo: "TKT784510", pnr: "PNR8842049", passenger: "Anand Reddy", gender: "M", mobile: "+91 99887 76655", email: "anand.r@mail.com", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-04", date: "29 May 2026", bus: "KR-3340", departure: "23:15", arrival: "04:45", fare: 650, status: "Used", issuedAt: "29 May 2026 · 18:55" },
-  { ticketNo: "TKT784509", pnr: "PNR8842048", passenger: "Meena Iyer", gender: "F", mobile: "+91 90001 22334", email: "meena.i@mail.com", route: "Chennai → Hyderabad", from: "Chennai", to: "Hyderabad", boarding: "Koyambedu · 20:45", dropping: "MGBS · 07:30", seat: "U-15", date: "29 May 2026", bus: "KR-5512", departure: "20:45", arrival: "07:30", fare: 1620, status: "Cancelled", issuedAt: "28 May 2026 · 09:12" },
-  { ticketNo: "TKT784508", pnr: "PNR8842047", passenger: "Suresh Babu", gender: "M", mobile: "+91 87654 32109", email: "suresh.b@mail.com", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "Miyapur · 22:10", dropping: "Majestic · 07:00", seat: "L-21", date: "28 May 2026", bus: "KR-1024", departure: "22:10", arrival: "07:00", fare: 1450, status: "Reprinted", issuedAt: "28 May 2026 · 11:30" },
-  { ticketNo: "TKT784507", pnr: "PNR8842046", passenger: "Kavya Nair", gender: "F", mobile: "+91 70010 99887", email: "kavya.n@mail.com", route: "Bangalore → Mumbai", from: "Bangalore", to: "Mumbai", boarding: "Yeshwantpur · 18:00", dropping: "Dadar · 10:30", seat: "U-02", date: "28 May 2026", bus: "KR-7788", departure: "18:00", arrival: "10:30", fare: 2150, status: "Active", issuedAt: "27 May 2026 · 16:40" },
-  { ticketNo: "TKT784506", pnr: "PNR8842045", passenger: "Rahul Verma", gender: "M", mobile: "+91 99112 33445", email: "rahul.v@mail.com", route: "Hyderabad → Bangalore", from: "Hyderabad", to: "Bangalore", boarding: "MGBS Bus Stand · 21:30", dropping: "Madiwala · 06:45", seat: "L-07", date: "30 May 2026", bus: "KR-1024", departure: "21:30", arrival: "06:45", fare: 1450, status: "Active", issuedAt: "30 May 2026 · 10:14" },
-  { ticketNo: "TKT784505", pnr: "PNR8842044", passenger: "Divya Pillai", gender: "F", mobile: "+91 88990 11223", email: "divya.p@mail.com", route: "Chennai → Hyderabad", from: "Chennai", to: "Hyderabad", boarding: "Koyambedu · 20:45", dropping: "MGBS · 07:30", seat: "L-18", date: "27 May 2026", bus: "KR-5512", departure: "20:45", arrival: "07:30", fare: 1620, status: "Reprinted", issuedAt: "27 May 2026 · 08:21" },
-  { ticketNo: "TKT784504", pnr: "PNR8842043", passenger: "Vinod Singh", gender: "M", mobile: "+91 77665 54433", email: "vinod.s@mail.com", route: "Bangalore → Chennai", from: "Bangalore", to: "Chennai", boarding: "Madiwala · 22:00", dropping: "Koyambedu · 05:30", seat: "U-11", date: "26 May 2026", bus: "KR-2218", departure: "22:00", arrival: "05:30", fare: 980, status: "Cancelled", issuedAt: "26 May 2026 · 12:00" },
-  { ticketNo: "TKT784503", pnr: "PNR8842042", passenger: "Lakshmi Devi", gender: "F", mobile: "+91 90909 80808", email: "lakshmi.d@mail.com", route: "Hyderabad → Vijayawada", from: "Hyderabad", to: "Vijayawada", boarding: "LB Nagar · 23:15", dropping: "Benz Circle · 04:45", seat: "L-09", date: "26 May 2026", bus: "KR-3340", departure: "23:15", arrival: "04:45", fare: 650, status: "Used", issuedAt: "25 May 2026 · 19:48" },
-];
 
 const PAGE_SIZE = 8;
 
@@ -117,7 +102,9 @@ function StatusPill({ status }: { status: TicketStatus }) {
     Reprinted: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${map[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${map[status]}`}
+    >
       {status}
     </span>
   );
@@ -190,13 +177,11 @@ function IconBtn({
 
 function TicketsPage() {
   const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
-  // Real bookings first, then the sample rows.
-  const TICKETS = useMemo(
-    () => [...(mine.data ?? []).map(toTicketRow), ...SAMPLE_TICKETS],
-    [mine.data],
-  );
+  const TICKETS = useMemo(() => (mine.data ?? []).map(toTicketRow), [mine.data]);
   const [query, setQuery] = useState("");
-  const [searchField, setSearchField] = useState<"all" | "pnr" | "ticket" | "mobile" | "name">("all");
+  const [searchField, setSearchField] = useState<"all" | "pnr" | "ticket" | "mobile" | "name">(
+    "all",
+  );
   const [status, setStatus] = useState<"All" | TicketStatus>("All");
   const [sourceFilter, setSourceFilter] = useState<"All" | BookingSource>("All");
   const [page, setPage] = useState(1);
@@ -227,11 +212,12 @@ function TicketsPage() {
       window.location.href = mailLink(t);
     },
     cancel: (t) => {
-      if (!t.bookingId) {
-        toast.info("This is a sample ticket, so there is nothing to cancel.");
-        return;
-      }
-      if (window.confirm(`Cancel the ticket for ${t.passenger}, seat ${t.seat}? This cannot be undone.`)) {
+      if (!t.bookingId) return;
+      if (
+        window.confirm(
+          `Cancel the ticket for ${t.passenger}, seat ${t.seat}? This cannot be undone.`,
+        )
+      ) {
         cancel.mutate(t.bookingId);
       }
     },
@@ -241,7 +227,8 @@ function TicketsPage() {
     const q = query.trim().toLowerCase();
     return TICKETS.filter((t) => {
       if (status !== "All" && t.status !== status) return false;
-      if (sourceFilter !== "All" && (t.source ?? sourceFor(t.ticketNo)) !== sourceFilter) return false;
+      if (sourceFilter !== "All" && (t.source ?? sourceFor(t.ticketNo)) !== sourceFilter)
+        return false;
       if (!q) return true;
       const map = {
         all: `${t.ticketNo} ${t.pnr} ${t.passenger} ${t.mobile}`,
@@ -294,7 +281,9 @@ function TicketsPage() {
         <div>
           <div className="text-[11px] uppercase tracking-widest text-white/60">Agent · AGT1024</div>
           <h2 className="mt-1 text-xl font-bold">Tickets &amp; Delivery</h2>
-          <p className="text-sm text-white/70">Reprint, resend, and manage every ticket issued through your counter.</p>
+          <p className="text-sm text-white/70">
+            Reprint, resend, and manage every ticket issued through your counter.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
@@ -310,10 +299,34 @@ function TicketsPage() {
 
       {/* Stats */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Active Tickets" value={String(stats.active)} sub="Valid for travel" icon={TicketCheck} tone="green" />
-        <StatCard label="Today's Tickets" value={String(stats.today)} sub="Issued today" icon={Ticket} tone="blue" />
-        <StatCard label="Cancelled Tickets" value={String(stats.cancelled)} sub="Refund processed" icon={Ban} tone="rose" />
-        <StatCard label="Reprinted Tickets" value={String(stats.reprinted)} sub="Duplicates issued" icon={RotateCw} tone="amber" />
+        <StatCard
+          label="Active Tickets"
+          value={String(stats.active)}
+          sub="Valid for travel"
+          icon={TicketCheck}
+          tone="green"
+        />
+        <StatCard
+          label="Today's Tickets"
+          value={String(stats.today)}
+          sub="Issued today"
+          icon={Ticket}
+          tone="blue"
+        />
+        <StatCard
+          label="Cancelled Tickets"
+          value={String(stats.cancelled)}
+          sub="Refund processed"
+          icon={Ban}
+          tone="rose"
+        />
+        <StatCard
+          label="Reprinted Tickets"
+          value={String(stats.reprinted)}
+          sub="Duplicates issued"
+          icon={RotateCw}
+          tone="amber"
+        />
       </div>
 
       {/* Quick Reprint Widget */}
@@ -322,7 +335,9 @@ function TicketsPage() {
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-foreground">Search Tickets</h3>
-              <p className="text-xs text-muted-foreground">Find any ticket by PNR, Ticket No, Mobile or Passenger.</p>
+              <p className="text-xs text-muted-foreground">
+                Find any ticket by PNR, Ticket No, Mobile or Passenger.
+              </p>
             </div>
           </div>
           <div className="flex flex-col gap-3 lg:flex-row">
@@ -365,11 +380,18 @@ function TicketsPage() {
             </select>
             <select
               value={sourceFilter}
-              onChange={(e) => { setSourceFilter(e.target.value as typeof sourceFilter); setPage(1); }}
+              onChange={(e) => {
+                setSourceFilter(e.target.value as typeof sourceFilter);
+                setPage(1);
+              }}
               className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-brand-green/40"
             >
               <option value="All">All Sources</option>
-              {BOOKING_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {BOOKING_SOURCES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -477,7 +499,10 @@ function TicketsPage() {
             </thead>
             <tbody>
               {paged.map((t) => (
-                <tr key={t.ticketNo} className="border-b border-border last:border-0 hover:bg-muted/30">
+                <tr
+                  key={t.ticketNo}
+                  className="border-b border-border last:border-0 hover:bg-muted/30"
+                >
                   <td className="px-5 py-3">
                     <button
                       onClick={() => setSelected(t)}
@@ -487,10 +512,12 @@ function TicketsPage() {
                     </button>
                     <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
                       <span>Issued {t.issuedAt}</span>
-                      <SourceBadge source={(t.source ?? sourceFor(t.ticketNo))} />
+                      <SourceBadge source={t.source ?? sourceFor(t.ticketNo)} />
                     </div>
                   </td>
-                  <td className="px-3 py-3 font-mono text-[12px] font-semibold text-foreground">{t.pnr}</td>
+                  <td className="px-3 py-3 font-mono text-[12px] font-semibold text-foreground">
+                    {t.pnr}
+                  </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-2">
                       <div
@@ -512,7 +539,9 @@ function TicketsPage() {
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">
                     {t.date}
-                    <div className="text-[10px]">{t.departure} → {t.arrival}</div>
+                    <div className="text-[10px]">
+                      {t.departure} → {t.arrival}
+                    </div>
                   </td>
                   <td className="px-3 py-3">
                     <StatusPill status={t.status} />
@@ -528,14 +557,22 @@ function TicketsPage() {
                       <IconBtn title="Download PDF" onClick={() => actions.print(t)}>
                         <Download className="h-4 w-4" />
                       </IconBtn>
-                      <IconBtn title="Share via WhatsApp" tone="whatsapp" onClick={() => actions.whatsapp(t)}>
+                      <IconBtn
+                        title="Share via WhatsApp"
+                        tone="whatsapp"
+                        onClick={() => actions.whatsapp(t)}
+                      >
                         <MessageCircle className="h-4 w-4" />
                       </IconBtn>
                       <IconBtn title="Send via Email" onClick={() => actions.email(t)}>
                         <Mail className="h-4 w-4" />
                       </IconBtn>
                       {t.status === "Active" && (
-                        <IconBtn title="Cancel Ticket" tone="danger" onClick={() => actions.cancel(t)}>
+                        <IconBtn
+                          title="Cancel Ticket"
+                          tone="danger"
+                          onClick={() => actions.cancel(t)}
+                        >
                           <XCircle className="h-4 w-4" />
                         </IconBtn>
                       )}
@@ -609,8 +646,6 @@ function TicketsPage() {
           stats={sourceStats}
         />
       </div>
-
-
 
       {selected && (
         <TicketDrawer ticket={selected} actions={actions} onClose={() => setSelected(null)} />
