@@ -33,6 +33,12 @@ export const supportKey = ["support", "tickets"] as const;
 export const listSupportTickets = () =>
   api<{ items: SupportTicket[] }>("/support/tickets").then((r) => r.items);
 
+export const setSupportTicketStatus = (id: string, status: "OPEN" | "RESOLVED") =>
+  api<{ id: string; status: string }>(`/support/tickets/${id}`, {
+    method: "PATCH",
+    body: { status },
+  });
+
 /** `emailed` is false when the ticket was saved but the copy to the support inbox did not go out. */
 export const createSupportTicket = (body: NewSupportTicket) =>
   api<SupportTicket & { emailed: boolean }>("/support/tickets", { method: "POST", body });

@@ -7,6 +7,7 @@ import { shortDate, clock } from "@/lib/api/booking";
 import {
   SUPPORT_CATEGORIES,
   createSupportTicket,
+  setSupportTicketStatus,
   listSupportTickets,
   supportKey,
   type NewSupportTicket,
@@ -20,6 +21,7 @@ import {
   Timer,
   Plus,
   X,
+  Pencil,
   MessageSquare,
   TicketIcon,
   CreditCard,
@@ -45,6 +47,8 @@ type Ticket = {
   priority: Priority;
   created: string;
   status: Status;
+  /** Database id; only tickets saved in the database can be edited. */
+  dbId?: string;
 };
 
 const TICKETS: Ticket[] = [
@@ -177,6 +181,7 @@ const toRow = (t: SupportTicket): Ticket => ({
   priority: PRIORITY_LABEL[t.priority],
   created: `${shortDate(t.createdAt)}, ${clock(t.createdAt)}`,
   status: STATUS_LABEL[t.status],
+  dbId: t.id,
 });
 
 const blankTicket: NewSupportTicket & { pnr: string } = {
@@ -191,7 +196,7 @@ function NewTicketDrawer({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(blankTicket);
   const set = (patch: Partial<typeof blankTicket>) => setForm((f) => ({ ...f, ...patch }));
-  const ready = form.subject.trim().length >= 3 && form.description.trim().length >= 5;
+  const ready = form.subject.trim().length >= 3 && form.description.trim().length >= 1;
 
   const save = useMutation({
     mutationFn: () => {
@@ -317,6 +322,19 @@ function SupportPage() {
   // Tickets saved in the database come first; the sample rows stay below them.
   const mine = useQuery({ queryKey: supportKey, queryFn: listSupportTickets });
   const tickets = [...(mine.data ?? []).map(toRow), ...TICKETS];
+  const queryClient = useQueryClient();
+  // The ticket whose status is being edited (the pencil was clicked).
+  const [editing, setEditing] = useState<string | null>(null);
+  const setStatus = useMutation({
+    mutationFn: (v: { id: string; status: "OPEN" | "RESOLVED" }) =>
+      setSupportTicketStatus(v.id, v.status),
+    onSuccess: (_, v) => {
+      queryClient.invalidateQueries({ queryKey: supportKey });
+      toast.success(v.status === "RESOLVED" ? "Ticket marked resolved" : "Ticket opened again");
+      setEditing(null);
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
 
   return (
     <AgentShell title="Support Center">
@@ -384,14 +402,12 @@ function SupportPage() {
                   <th className="px-5 py-3 text-left font-medium">Priority</th>
                   <th className="px-5 py-3 text-left font-medium">Created</th>
                   <th className="px-5 py-3 text-left font-medium">Status</th>
+                  <th className="px-5 py-3 text-right font-medium">Edit</th>
                 </tr>
               </thead>
               <tbody>
                 {tickets.map((t) => (
-                  <tr
-                    key={t.id}
-                    className="border-t border-border hover:bg-muted/30 cursor-pointer"
-                  >
+                  <tr key={t.id} className="border-t border-border hover:bg-muted/30">
                     <td className="px-5 py-3 font-mono text-xs font-semibold text-brand-green">
                       {t.id}
                     </td>
@@ -408,11 +424,42 @@ function SupportPage() {
                     </td>
                     <td className="px-5 py-3 text-xs text-muted-foreground">{t.created}</td>
                     <td className="px-5 py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusClass(t.status)}`}
-                      >
-                        {t.status}
-                      </span>
+                      {t.dbId && editing === t.dbId ? (
+                        <select
+                          autoFocus
+                          disabled={setStatus.isPending}
+                          value={t.status === "Resolved" ? "RESOLVED" : "OPEN"}
+                          onChange={(e) =>
+                            setStatus.mutate({
+                              id: t.dbId!,
+                              status: e.target.value as "OPEN" | "RESOLVED",
+                            })
+                          }
+                          onBlur={() => setEditing(null)}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        >
+                          <option value="OPEN">Open</option>
+                          <option value="RESOLVED">Resolved</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusClass(t.status)}`}
+                        >
+                          {t.status}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      {t.dbId && (
+                        <button
+                          title="Change status"
+                          aria-label={`Change status of ${t.id}`}
+                          onClick={() => setEditing(editing === t.dbId ? null : t.dbId!)}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-brand-green hover:text-brand-green"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
