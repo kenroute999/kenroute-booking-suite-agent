@@ -41,7 +41,7 @@ function seatTitle(seat: TripSeat) {
   }
   if (seat.status === "BOOKED") return `${what} · Booked`;
   if (seat.status === "HELD") return `${what} · Being booked by another agent`;
-  return `${what} · Blocked`;
+  return `${what} · Blocked by the bus owner`;
 }
 
 /**
