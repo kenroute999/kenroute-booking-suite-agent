@@ -35,6 +35,8 @@ export type AuthUser = {
   email: string;
   name?: string;
   operatorId?: string;
+  /** The bus company this account belongs to, shown in the side bar. */
+  operatorName?: string;
   /** Backend role claim. Agent app accepts AGENT only. */
   role: string;
   /** Agent code (e.g. AGT1024) when the backend provides one. */
@@ -116,7 +118,7 @@ function parseTokens(data: unknown): AuthTokens | null {
 
 function parseUser(data: unknown): AuthUser | null {
   if (!isRecord(data)) return null;
-  const { id, userId, email, name, operatorId, role, agentCode } = data;
+  const { id, userId, email, name, operatorId, operatorName, role, agentCode } = data;
   const resolvedId = typeof id === "string" ? id : typeof userId === "string" ? userId : null;
   if (!resolvedId || typeof email !== "string" || typeof role !== "string") return null;
   return {
@@ -124,6 +126,7 @@ function parseUser(data: unknown): AuthUser | null {
     email,
     name: typeof name === "string" ? name : undefined,
     operatorId: typeof operatorId === "string" ? operatorId : undefined,
+    operatorName: typeof operatorName === "string" ? operatorName : undefined,
     role,
     agentCode: typeof agentCode === "string" ? agentCode : undefined,
   };
