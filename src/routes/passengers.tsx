@@ -43,7 +43,14 @@ type Passenger = {
   totalSpend: number;
   joinedOn: string;
   topRoutes: { route: string; trips: number }[];
-  history: { date: string; route: string; bus: string; seat: string; amount: number; status: string }[];
+  history: {
+    date: string;
+    route: string;
+    bus: string;
+    seat: string;
+    amount: number;
+    status: string;
+  }[];
 };
 
 const cityCode = (city: string) => city.slice(0, 3).toUpperCase();
@@ -92,182 +99,6 @@ function realPassengers(bookings: MyBooking[]): Passenger[] {
   });
 }
 
-const SAMPLE_PASSENGERS: Passenger[] = [
-  {
-    id: "PAX10231",
-    name: "Ravi Kumar",
-    mobile: "+91 98480 11223",
-    email: "ravi.kumar@gmail.com",
-    gender: "M",
-    age: 34,
-    city: "Hyderabad",
-    trips: 24,
-    lastJourney: "29 May 2026",
-    lastRoute: "HYD → BLR",
-    status: "VIP",
-    totalSpend: 38420,
-    joinedOn: "12 Jan 2024",
-    topRoutes: [
-      { route: "Hyderabad → Bangalore", trips: 12 },
-      { route: "Hyderabad → Chennai", trips: 7 },
-      { route: "Bangalore → Hyderabad", trips: 5 },
-    ],
-    history: [
-      { date: "29 May 2026", route: "HYD → BLR", bus: "KR-2041", seat: "U12", amount: 1450, status: "Confirmed" },
-      { date: "12 Apr 2026", route: "HYD → BLR", bus: "KR-2041", seat: "L08", amount: 1450, status: "Confirmed" },
-      { date: "03 Mar 2026", route: "HYD → MAA", bus: "KR-3320", seat: "U03", amount: 1650, status: "Completed" },
-      { date: "21 Feb 2026", route: "BLR → HYD", bus: "KR-2042", seat: "L14", amount: 1450, status: "Completed" },
-    ],
-  },
-  {
-    id: "PAX10232",
-    name: "Priya Sharma",
-    mobile: "+91 99012 33445",
-    email: "priya.sharma@outlook.com",
-    gender: "F",
-    age: 28,
-    city: "Bangalore",
-    trips: 11,
-    lastJourney: "28 May 2026",
-    lastRoute: "BLR → HYD",
-    status: "Active",
-    totalSpend: 16240,
-    joinedOn: "04 Sep 2024",
-    topRoutes: [
-      { route: "Bangalore → Hyderabad", trips: 6 },
-      { route: "Hyderabad → Bangalore", trips: 5 },
-    ],
-    history: [
-      { date: "28 May 2026", route: "BLR → HYD", bus: "KR-2042", seat: "L05", amount: 1450, status: "Confirmed" },
-      { date: "10 May 2026", route: "HYD → BLR", bus: "KR-2041", seat: "U07", amount: 1450, status: "Completed" },
-    ],
-  },
-  {
-    id: "PAX10233",
-    name: "Anil Reddy",
-    mobile: "+91 98765 43210",
-    email: "anil.reddy@gmail.com",
-    gender: "M",
-    age: 41,
-    city: "Vijayawada",
-    trips: 18,
-    lastJourney: "27 May 2026",
-    lastRoute: "HYD → VIJ",
-    status: "VIP",
-    totalSpend: 26880,
-    joinedOn: "22 Mar 2024",
-    topRoutes: [
-      { route: "Hyderabad → Vijayawada", trips: 10 },
-      { route: "Vijayawada → Hyderabad", trips: 8 },
-    ],
-    history: [
-      { date: "27 May 2026", route: "HYD → VIJ", bus: "KR-5510", seat: "U02", amount: 950, status: "Confirmed" },
-      { date: "14 May 2026", route: "VIJ → HYD", bus: "KR-5511", seat: "L11", amount: 950, status: "Completed" },
-    ],
-  },
-  {
-    id: "PAX10234",
-    name: "Sneha Iyer",
-    mobile: "+91 90004 12345",
-    email: "sneha.iyer@yahoo.com",
-    gender: "F",
-    age: 31,
-    city: "Chennai",
-    trips: 6,
-    lastJourney: "24 May 2026",
-    lastRoute: "MAA → BLR",
-    status: "Active",
-    totalSpend: 9420,
-    joinedOn: "18 Nov 2024",
-    topRoutes: [
-      { route: "Chennai → Bangalore", trips: 4 },
-      { route: "Bangalore → Chennai", trips: 2 },
-    ],
-    history: [
-      { date: "24 May 2026", route: "MAA → BLR", bus: "KR-7720", seat: "L09", amount: 1290, status: "Confirmed" },
-    ],
-  },
-  {
-    id: "PAX10235",
-    name: "Mahesh Babu",
-    mobile: "+91 87654 32109",
-    email: "mahesh.b@gmail.com",
-    gender: "M",
-    age: 38,
-    city: "Hyderabad",
-    trips: 3,
-    lastJourney: "22 May 2026",
-    lastRoute: "HYD → BLR",
-    status: "Active",
-    totalSpend: 4350,
-    joinedOn: "02 Mar 2026",
-    topRoutes: [{ route: "Hyderabad → Bangalore", trips: 3 }],
-    history: [
-      { date: "22 May 2026", route: "HYD → BLR", bus: "KR-2041", seat: "U18", amount: 1450, status: "Confirmed" },
-    ],
-  },
-  {
-    id: "PAX10236",
-    name: "Lakshmi Devi",
-    mobile: "+91 99887 76655",
-    email: "lakshmi.d@gmail.com",
-    gender: "F",
-    age: 45,
-    city: "Tirupati",
-    trips: 9,
-    lastJourney: "18 May 2026",
-    lastRoute: "TPT → HYD",
-    status: "Active",
-    totalSpend: 11340,
-    joinedOn: "30 Jul 2024",
-    topRoutes: [
-      { route: "Tirupati → Hyderabad", trips: 5 },
-      { route: "Hyderabad → Tirupati", trips: 4 },
-    ],
-    history: [
-      { date: "18 May 2026", route: "TPT → HYD", bus: "KR-9920", seat: "L04", amount: 1260, status: "Completed" },
-    ],
-  },
-  {
-    id: "PAX10237",
-    name: "Karthik Naidu",
-    mobile: "+91 90909 80808",
-    email: "karthik.n@gmail.com",
-    gender: "M",
-    age: 29,
-    city: "Bangalore",
-    trips: 2,
-    lastJourney: "15 May 2026",
-    lastRoute: "BLR → HYD",
-    status: "Inactive",
-    totalSpend: 2900,
-    joinedOn: "11 Apr 2026",
-    topRoutes: [{ route: "Bangalore → Hyderabad", trips: 2 }],
-    history: [
-      { date: "15 May 2026", route: "BLR → HYD", bus: "KR-2042", seat: "U21", amount: 1450, status: "Completed" },
-    ],
-  },
-  {
-    id: "PAX10238",
-    name: "Divya Menon",
-    mobile: "+91 88112 23344",
-    email: "divya.menon@gmail.com",
-    gender: "F",
-    age: 26,
-    city: "Kochi",
-    trips: 5,
-    lastJourney: "10 May 2026",
-    lastRoute: "COK → BLR",
-    status: "Active",
-    totalSpend: 7900,
-    joinedOn: "08 Dec 2024",
-    topRoutes: [{ route: "Kochi → Bangalore", trips: 5 }],
-    history: [
-      { date: "10 May 2026", route: "COK → BLR", bus: "KR-6610", seat: "L17", amount: 1580, status: "Completed" },
-    ],
-  },
-];
-
 function StatCard({
   label,
   value,
@@ -291,7 +122,9 @@ function StatCard({
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </div>
           <div className="mt-2 text-2xl font-bold text-foreground">{value}</div>
           {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
         </div>
@@ -320,13 +153,8 @@ function StatusPill({ status }: { status: Passenger["status"] }) {
 
 function PassengersPage() {
   const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
-  // Real passengers first, then the sample rows.
-  // The sample totals stand in for history; real passengers are counted on top of them.
-  const realCount = useMemo(() => realPassengers(mine.data ?? []).length, [mine.data]);
-  const PASSENGERS = useMemo(
-    () => [...realPassengers(mine.data ?? []), ...SAMPLE_PASSENGERS],
-    [mine.data],
-  );
+  const PASSENGERS = useMemo(() => realPassengers(mine.data ?? []), [mine.data]);
+  const repeat = PASSENGERS.filter((p) => p.trips > 1).length;
   const [query, setQuery] = useState("");
   const [field, setField] = useState<"all" | "name" | "mobile" | "id">("all");
   const [statusFilter, setStatusFilter] = useState<"All" | Passenger["status"]>("All");
@@ -358,10 +186,28 @@ function PassengersPage() {
       <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total Passengers" value={(2184 + realCount).toLocaleString("en-IN")} icon={Users} hint="All-time database" tone="blue" />
-          <StatCard label="Active Passengers" value={(1742 + realCount).toLocaleString("en-IN")} icon={UserCheck} hint="Travelled last 90 days" tone="green" />
-          <StatCard label="New This Month" value={String(138 + realCount)} icon={UserPlus} hint="+12% vs last month" tone="amber" />
-          <StatCard label="Repeat Customers" value="68%" icon={Repeat} hint="2+ trips lifetime" />
+          <StatCard
+            label="Total Passengers"
+            value={PASSENGERS.length.toLocaleString("en-IN")}
+            icon={Users}
+            hint="From your bookings"
+            tone="blue"
+          />
+          <StatCard
+            label="Tickets Booked"
+            value={PASSENGERS.reduce((sum, p) => sum + p.trips, 0).toLocaleString("en-IN")}
+            icon={UserCheck}
+            hint="All their trips"
+            tone="green"
+          />
+          <StatCard
+            label="One-time Customers"
+            value={String(PASSENGERS.length - repeat)}
+            icon={UserPlus}
+            hint="1 trip so far"
+            tone="amber"
+          />
+          <StatCard label="Repeat Customers" value={String(repeat)} icon={Repeat} hint="2+ trips" />
         </div>
 
         {/* Search + filters */}
@@ -432,7 +278,9 @@ function PassengersPage() {
               <tbody className="divide-y divide-border">
                 {pageRows.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/40">
-                    <td className="px-5 py-3 font-mono text-xs font-semibold text-foreground">{p.id}</td>
+                    <td className="px-5 py-3 font-mono text-xs font-semibold text-foreground">
+                      {p.id}
+                    </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div
@@ -472,9 +320,13 @@ function PassengersPage() {
                     </td>
                     <td className="px-5 py-3">
                       {p.status === "VIP" ? (
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200">VIP</span>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                          VIP
+                        </span>
                       ) : (
-                        <SourceBadge source={sourceFor(p.id) === "Corporate" ? "Corporate" : "Agent"} />
+                        <SourceBadge
+                          source={sourceFor(p.id) === "Corporate" ? "Corporate" : "Agent"}
+                        />
                       )}
                     </td>
                     <td className="px-5 py-3">
@@ -511,7 +363,10 @@ function PassengersPage() {
                 ))}
                 {pageRows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td
+                      colSpan={9}
+                      className="px-5 py-10 text-center text-sm text-muted-foreground"
+                    >
                       No passengers found matching your search.
                     </td>
                   </tr>
@@ -590,17 +445,23 @@ function PassengersPage() {
               {/* Top stats */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">Trips</div>
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Trips
+                  </div>
                   <div className="mt-1 text-xl font-bold text-foreground">{selected.trips}</div>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">Spend</div>
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Spend
+                  </div>
                   <div className="mt-1 text-xl font-bold text-brand-green">
                     ₹{selected.totalSpend.toLocaleString("en-IN")}
                   </div>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">Since</div>
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Since
+                  </div>
                   <div className="mt-1 text-sm font-bold text-foreground">{selected.joinedOn}</div>
                 </div>
               </div>

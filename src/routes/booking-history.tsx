@@ -69,22 +69,11 @@ type Booking = {
   amount: number;
   payment: PaymentStatus;
   status: BookingStatus;
-  /** Real bookings carry their source; sample rows fall back to a derived one. */
   source?: BookingSource;
-  /** Set on real bookings only; sample rows cannot be cancelled. */
   bookingId?: string;
   /** What the ticket's QR code holds. */
   qr?: string;
 };
-
-const ROUTES = [
-  "All Routes",
-  "Hyderabad → Bangalore",
-  "Bangalore → Chennai",
-  "Hyderabad → Vijayawada",
-  "Chennai → Hyderabad",
-  "Bangalore → Mumbai",
-];
 
 const BOOKING_STATUS: Record<MyBooking["status"], BookingStatus> = {
   CREATED: "Pending",
@@ -103,237 +92,6 @@ function toBookingRow(b: MyBooking): Booking {
     status: BOOKING_STATUS[b.status],
   };
 }
-
-const SAMPLE_BOOKINGS: Booking[] = [
-  {
-    id: "KR-2026-10481",
-    ticketNo: "TKT784512",
-    passenger: "Ravi Kumar",
-    gender: "M",
-    mobile: "+91 98765 43210",
-    route: "Hyderabad → Bangalore",
-    from: "Hyderabad",
-    to: "Bangalore",
-    boarding: "MGBS Bus Stand · 21:30",
-    dropping: "Madiwala · 06:45",
-    seat: "L-12",
-    date: "30 May 2026",
-    bus: "KR-1024",
-    departure: "21:30",
-    amount: 1450,
-    payment: "Paid",
-    status: "Confirmed",
-  },
-  {
-    id: "KR-2026-10480",
-    ticketNo: "TKT784511",
-    passenger: "Priya Sharma",
-    gender: "F",
-    mobile: "+91 98220 11234",
-    route: "Bangalore → Chennai",
-    from: "Bangalore",
-    to: "Chennai",
-    boarding: "Madiwala · 22:00",
-    dropping: "Koyambedu · 05:30",
-    seat: "U-08",
-    date: "30 May 2026",
-    bus: "KR-2218",
-    departure: "22:00",
-    amount: 980,
-    payment: "Paid",
-    status: "Confirmed",
-  },
-  {
-    id: "KR-2026-10479",
-    ticketNo: "TKT784510",
-    passenger: "Anand Reddy",
-    gender: "M",
-    mobile: "+91 99887 76655",
-    route: "Hyderabad → Vijayawada",
-    from: "Hyderabad",
-    to: "Vijayawada",
-    boarding: "LB Nagar · 23:15",
-    dropping: "Benz Circle · 04:45",
-    seat: "L-04",
-    date: "29 May 2026",
-    bus: "KR-3340",
-    departure: "23:15",
-    amount: 650,
-    payment: "Paid",
-    status: "Completed",
-  },
-  {
-    id: "KR-2026-10478",
-    ticketNo: "TKT784509",
-    passenger: "Meena Iyer",
-    gender: "F",
-    mobile: "+91 90001 22334",
-    route: "Chennai → Hyderabad",
-    from: "Chennai",
-    to: "Hyderabad",
-    boarding: "Koyambedu · 20:45",
-    dropping: "MGBS · 07:30",
-    seat: "U-15",
-    date: "29 May 2026",
-    bus: "KR-5512",
-    departure: "20:45",
-    amount: 1620,
-    payment: "Refunded",
-    status: "Cancelled",
-  },
-  {
-    id: "KR-2026-10477",
-    ticketNo: "TKT784508",
-    passenger: "Suresh Babu",
-    gender: "M",
-    mobile: "+91 87654 32109",
-    route: "Hyderabad → Bangalore",
-    from: "Hyderabad",
-    to: "Bangalore",
-    boarding: "Miyapur · 22:10",
-    dropping: "Majestic · 07:00",
-    seat: "L-21",
-    date: "28 May 2026",
-    bus: "KR-1024",
-    departure: "22:10",
-    amount: 1450,
-    payment: "Paid",
-    status: "Completed",
-  },
-  {
-    id: "KR-2026-10476",
-    ticketNo: "TKT784507",
-    passenger: "Kavya Nair",
-    gender: "F",
-    mobile: "+91 70010 99887",
-    route: "Bangalore → Mumbai",
-    from: "Bangalore",
-    to: "Mumbai",
-    boarding: "Yeshwantpur · 18:00",
-    dropping: "Dadar · 10:30",
-    seat: "U-02",
-    date: "28 May 2026",
-    bus: "KR-7788",
-    departure: "18:00",
-    amount: 2150,
-    payment: "Paid",
-    status: "Confirmed",
-  },
-  {
-    id: "KR-2026-10475",
-    ticketNo: "TKT784506",
-    passenger: "Rahul Verma",
-    gender: "M",
-    mobile: "+91 99112 33445",
-    route: "Hyderabad → Bangalore",
-    from: "Hyderabad",
-    to: "Bangalore",
-    boarding: "MGBS Bus Stand · 21:30",
-    dropping: "Madiwala · 06:45",
-    seat: "L-07",
-    date: "27 May 2026",
-    bus: "KR-1024",
-    departure: "21:30",
-    amount: 1450,
-    payment: "Pending",
-    status: "Pending",
-  },
-  {
-    id: "KR-2026-10474",
-    ticketNo: "TKT784505",
-    passenger: "Divya Pillai",
-    gender: "F",
-    mobile: "+91 88990 11223",
-    route: "Chennai → Hyderabad",
-    from: "Chennai",
-    to: "Hyderabad",
-    boarding: "Koyambedu · 20:45",
-    dropping: "MGBS · 07:30",
-    seat: "L-18",
-    date: "27 May 2026",
-    bus: "KR-5512",
-    departure: "20:45",
-    amount: 1620,
-    payment: "Paid",
-    status: "Completed",
-  },
-  {
-    id: "KR-2026-10473",
-    ticketNo: "TKT784504",
-    passenger: "Vinod Singh",
-    gender: "M",
-    mobile: "+91 77665 54433",
-    route: "Bangalore → Chennai",
-    from: "Bangalore",
-    to: "Chennai",
-    boarding: "Madiwala · 22:00",
-    dropping: "Koyambedu · 05:30",
-    seat: "U-11",
-    date: "26 May 2026",
-    bus: "KR-2218",
-    departure: "22:00",
-    amount: 980,
-    payment: "Refunded",
-    status: "Cancelled",
-  },
-  {
-    id: "KR-2026-10472",
-    ticketNo: "TKT784503",
-    passenger: "Lakshmi Devi",
-    gender: "F",
-    mobile: "+91 90909 80808",
-    route: "Hyderabad → Vijayawada",
-    from: "Hyderabad",
-    to: "Vijayawada",
-    boarding: "LB Nagar · 23:15",
-    dropping: "Benz Circle · 04:45",
-    seat: "L-09",
-    date: "26 May 2026",
-    bus: "KR-3340",
-    departure: "23:15",
-    amount: 650,
-    payment: "Paid",
-    status: "Completed",
-  },
-  {
-    id: "KR-2026-10471",
-    ticketNo: "TKT784502",
-    passenger: "Arjun Mehta",
-    gender: "M",
-    mobile: "+91 81234 56789",
-    route: "Bangalore → Mumbai",
-    from: "Bangalore",
-    to: "Mumbai",
-    boarding: "Yeshwantpur · 18:00",
-    dropping: "Dadar · 10:30",
-    seat: "U-19",
-    date: "25 May 2026",
-    bus: "KR-7788",
-    departure: "18:00",
-    amount: 2150,
-    payment: "Paid",
-    status: "Completed",
-  },
-  {
-    id: "KR-2026-10470",
-    ticketNo: "TKT784501",
-    passenger: "Sneha Reddy",
-    gender: "F",
-    mobile: "+91 98123 45670",
-    route: "Hyderabad → Bangalore",
-    from: "Hyderabad",
-    to: "Bangalore",
-    boarding: "Miyapur · 22:10",
-    dropping: "Majestic · 07:00",
-    seat: "L-03",
-    date: "25 May 2026",
-    bus: "KR-1024",
-    departure: "22:10",
-    amount: 1450,
-    payment: "Paid",
-    status: "Completed",
-  },
-];
 
 const PAGE_SIZE = 8;
 
@@ -408,10 +166,11 @@ function StatCard({
 
 function BookingHistoryPage() {
   const mine = useQuery({ queryKey: myBookingsKey, queryFn: listMyBookings });
-  // Real bookings first, then the sample rows.
-  const BOOKINGS = useMemo(
-    () => [...(mine.data ?? []).map(toBookingRow), ...SAMPLE_BOOKINGS],
-    [mine.data],
+  const BOOKINGS = useMemo(() => (mine.data ?? []).map(toBookingRow), [mine.data]);
+  // The route filter lists only the routes this agent has sold.
+  const ROUTES = useMemo(
+    () => ["All Routes", ...new Set(BOOKINGS.map((b) => b.route))],
+    [BOOKINGS],
   );
   const [query, setQuery] = useState("");
   const [searchField, setSearchField] = useState<"all" | "id" | "name" | "mobile" | "ticket">(
@@ -447,10 +206,7 @@ function BookingHistoryPage() {
       window.location.href = `tel:${b.mobile.replace(/[^\d+]/g, "")}`;
     },
     cancel: (b) => {
-      if (!b.bookingId) {
-        toast.info("This is a sample booking, so there is nothing to cancel.");
-        return;
-      }
+      if (!b.bookingId) return;
       if (
         window.confirm(
           `Cancel the booking for ${b.passenger}, seat ${b.seat}? This cannot be undone.`,
@@ -465,8 +221,34 @@ function BookingHistoryPage() {
   const exportCsv = () =>
     downloadCsv(
       "kenroute-bookings.csv",
-      ["Booking ID", "Ticket No", "Passenger", "Mobile", "Route", "Seat", "Journey Date", "Departure", "Bus", "Amount", "Payment", "Status"],
-      filtered.map((b) => [b.id, b.ticketNo, b.passenger, b.mobile, b.route, b.seat, b.date, b.departure, b.bus, b.amount, b.payment, b.status]),
+      [
+        "Booking ID",
+        "Ticket No",
+        "Passenger",
+        "Mobile",
+        "Route",
+        "Seat",
+        "Journey Date",
+        "Departure",
+        "Bus",
+        "Amount",
+        "Payment",
+        "Status",
+      ],
+      filtered.map((b) => [
+        b.id,
+        b.ticketNo,
+        b.passenger,
+        b.mobile,
+        b.route,
+        b.seat,
+        b.date,
+        b.departure,
+        b.bus,
+        b.amount,
+        b.payment,
+        b.status,
+      ]),
     );
 
   const filtered = useMemo(() => {
