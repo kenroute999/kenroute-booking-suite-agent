@@ -105,7 +105,7 @@ function NewBooking() {
     queryFn: () => getSeats(tripId),
     enabled: tripId !== "",
     // Other agents are selling the same bus, so keep the picture fresh.
-    refetchInterval: 20_000,
+    refetchInterval: 5_000,
   });
 
   const clearBooking = () => {
