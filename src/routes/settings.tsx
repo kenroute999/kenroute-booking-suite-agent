@@ -127,19 +127,27 @@ function SettingsPage() {
               <div className="grid grid-cols-1 gap-4 py-5 md:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground">Full Name</label>
-                  <input className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" defaultValue="Anil Kumar Reddy" />
+                  <input className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" placeholder="Enter full name" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground">Agent ID</label>
-                  <input disabled className="mt-1 h-10 w-full rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground" defaultValue="AGT1024" />
+                  <input disabled className="mt-1 h-10 w-full rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground" placeholder="Agent ID" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground"><Smartphone className="mr-1 inline h-3 w-3" />Mobile Number</label>
-                  <input className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" defaultValue="+91 98765 43210" />
+                  <input
+                    className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    placeholder="Enter mobile number"
+                    inputMode="numeric"
+                    maxLength={10}
+                    onChange={(e) => {
+                      e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 10);
+                    }}
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground"><Mail className="mr-1 inline h-3 w-3" />Email Address</label>
-                  <input className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" defaultValue="anil.kumar@kenroute.in" />
+                  <input className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" placeholder="Enter email address" />
                 </div>
               </div>
               <div className="flex justify-end gap-2 pb-5 pt-2">
@@ -171,9 +179,9 @@ function SettingsPage() {
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><KeyRound className="h-4 w-4" /> Recent Login Activity</div>
                   <div className="mt-3 space-y-2">
                     {[
-                      { device: "Chrome on Windows · Hyderabad, IN", time: "Active now", current: true },
-                      { device: "Safari on iPhone · Hyderabad, IN", time: "31 May 2026, 09:12 AM" },
-                      { device: "Chrome on Android · Vijayawada, IN", time: "29 May 2026, 06:42 PM" },
+                      { device: "Enter device info", time: "Enter time", current: true },
+                      { device: "Enter device info", time: "Enter time" },
+                      { device: "Enter device info", time: "Enter time" },
                     ].map((l) => (
                       <div key={l.device} className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
                         <div>

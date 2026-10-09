@@ -51,96 +51,39 @@ type Ticket = {
   dbId?: string;
 };
 
-const TICKETS: Ticket[] = [
-  {
-    id: "SUP10042",
-    subject: "Unable to print ticket for PNR KR82145",
-    category: "Ticket Problems",
-    priority: "High",
-    created: "31 May 2026, 11:20 AM",
-    status: "Open",
-  },
-  {
-    id: "SUP10041",
-    subject: "Refund not credited for cancelled booking",
-    category: "Payment Issues",
-    priority: "Urgent",
-    created: "31 May 2026, 09:45 AM",
-    status: "In Progress",
-  },
-  {
-    id: "SUP10040",
-    subject: "Wrong boarding point shown on ticket",
-    category: "Booking Issues",
-    priority: "Medium",
-    created: "30 May 2026, 06:10 PM",
-    status: "Pending",
-  },
-  {
-    id: "SUP10039",
-    subject: "How to add new route to my panel?",
-    category: "Route Queries",
-    priority: "Low",
-    created: "30 May 2026, 02:30 PM",
-    status: "Resolved",
-  },
-  {
-    id: "SUP10038",
-    subject: "QR code not scanning at boarding",
-    category: "Technical Support",
-    priority: "High",
-    created: "29 May 2026, 04:18 PM",
-    status: "Resolved",
-  },
-  {
-    id: "SUP10037",
-    subject: "Wallet balance mismatch",
-    category: "Payment Issues",
-    priority: "Urgent",
-    created: "29 May 2026, 11:02 AM",
-    status: "Resolved",
-  },
-  {
-    id: "SUP10036",
-    subject: "App crashes on seat selection",
-    category: "Technical Support",
-    priority: "High",
-    created: "28 May 2026, 03:55 PM",
-    status: "Resolved",
-  },
-];
+const TICKETS: Ticket[] = [];
 
 const STATS = [
-  { label: "Open Tickets", value: "3", icon: LifeBuoy, color: "text-amber-600 bg-amber-500/10" },
+  { label: "Open Tickets", value: "0", icon: LifeBuoy, color: "text-amber-600 bg-amber-500/10" },
   {
     label: "Resolved Tickets",
-    value: "248",
+    value: "0",
     icon: CheckCircle2,
     color: "text-brand-green bg-brand-green/10",
   },
-  { label: "Pending Requests", value: "7", icon: Clock, color: "text-blue-600 bg-blue-500/10" },
+  { label: "Pending Requests", value: "0", icon: Clock, color: "text-blue-600 bg-blue-500/10" },
   {
     label: "Avg Response Time",
-    value: "2h 14m",
+    value: "—",
     icon: Timer,
     color: "text-violet-600 bg-violet-500/10",
   },
 ];
 
 const CATEGORIES = [
-  { name: "Booking Issues", icon: TicketIcon, count: 24 },
-  { name: "Payment Issues", icon: CreditCard, count: 18 },
-  { name: "Ticket Problems", icon: TicketIcon, count: 12 },
-  { name: "Route Queries", icon: RouteIcon, count: 9 },
-  { name: "Technical Support", icon: Wrench, count: 31 },
+  { name: "Booking Issues", icon: TicketIcon, count: 0 },
+  { name: "Payment Issues", icon: CreditCard, count: 0 },
+  { name: "Ticket Problems", icon: TicketIcon, count: 0 },
+  { name: "Route Queries", icon: RouteIcon, count: 0 },
+  { name: "Technical Support", icon: Wrench, count: 0 },
 ];
 
 const KB = [
-  { type: "FAQ", title: "How to issue a refund for cancelled tickets?", reads: "1.2k" },
-  { type: "Guide", title: "Setting up your agent commission preferences", reads: "986" },
-  { type: "Article", title: "Understanding wallet payouts and processing time", reads: "742" },
-  { type: "FAQ", title: "What to do if QR code fails to scan?", reads: "634" },
-  { type: "Guide", title: "Step-by-step: Creating a new booking", reads: "521" },
+  { type: "FAQ", title: "How to issue a refund for cancelled tickets?", reads: "0" },
+  { type: "Guide", title: "Setting up your agent commission preferences", reads: "0" },
+  { type: "Article", title: "Understanding wallet payouts and processing time", reads: "0" },
+  { type: "FAQ", title: "What to do if QR code fails to scan?", reads: "0" },
+  { type: "Guide", title: "Step-by-step: Creating a new booking", reads: "0" },
 ];
 
 function priorityClass(p: Priority) {
@@ -523,13 +466,7 @@ function SupportPage() {
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto bg-muted/30 p-4">
             <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-card px-3 py-2 text-xs shadow-sm">
-              Hi Anil 👋 How can we help you today?
-            </div>
-            <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-brand-green px-3 py-2 text-xs text-white">
-              I need help with a refund.
-            </div>
-            <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-card px-3 py-2 text-xs shadow-sm">
-              Sure! Please share the booking PNR or ticket ID.
+              Hi there 👋 How can we help you today?
             </div>
           </div>
           <div className="flex items-center gap-2 border-t border-border p-3">

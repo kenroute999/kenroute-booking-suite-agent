@@ -33,32 +33,18 @@ type Offer = {
   status: OfferStatus;
 };
 
-const OFFERS: Offer[] = [
-  { id: "OF001", name: "Summer Travel Sale", code: "SUMMER20", discount: "20%", type: "Percentage", start: "01 May 2026", end: "30 Jun 2026", used: 412, limit: 1000, status: "Active" },
-  { id: "OF002", name: "First Booking Offer", code: "WELCOME100", discount: "₹100", type: "Flat", start: "01 Jan 2026", end: "31 Dec 2026", used: 1284, limit: 5000, status: "Active" },
-  { id: "OF003", name: "Weekend Special", code: "WKND15", discount: "15%", type: "Percentage", start: "01 Jun 2026", end: "31 Aug 2026", used: 86, limit: 500, status: "Active" },
-  { id: "OF004", name: "Festive Bonanza", code: "FESTIVE25", discount: "25%", type: "Percentage", start: "15 Jun 2026", end: "30 Jun 2026", used: 0, limit: 2000, status: "Scheduled" },
-  { id: "OF005", name: "Monsoon Magic", code: "RAIN50", discount: "₹50", type: "Flat", start: "01 Jul 2026", end: "30 Sep 2026", used: 0, limit: 1500, status: "Scheduled" },
-  { id: "OF006", name: "Diwali Special 2025", code: "DIWALI30", discount: "30%", type: "Percentage", start: "20 Oct 2025", end: "05 Nov 2025", used: 892, limit: 1000, status: "Expired" },
-  { id: "OF007", name: "Student Discount", code: "STUDENT10", discount: "10%", type: "Percentage", start: "01 Apr 2026", end: "31 Mar 2027", used: 245, limit: 3000, status: "Paused" },
-];
+const OFFERS: Offer[] = [];
 
 const STATS = [
-  { label: "Active Offers", value: "3", icon: Tag, sub: "Currently running" },
-  { label: "Total Coupons", value: "47", icon: Ticket, sub: "Lifetime created" },
-  { label: "Redemption Rate", value: "68%", icon: Percent, sub: "+4.2% this month" },
-  { label: "Promotional Revenue", value: "₹2,84,500", icon: IndianRupee, sub: "From offers this month" },
+  { label: "Active Offers", value: "0", icon: Tag, sub: "Currently running" },
+  { label: "Total Coupons", value: "0", icon: Ticket, sub: "Lifetime created" },
+  { label: "Redemption Rate", value: "—", icon: Percent, sub: "No redemptions yet" },
+  { label: "Promotional Revenue", value: "₹0", icon: IndianRupee, sub: "From offers this month" },
 ];
 
-const TOP_COUPONS = [
-  { code: "WELCOME100", used: 1284, revenue: 184600 },
-  { code: "DIWALI30", used: 892, revenue: 142800 },
-  { code: "SUMMER20", used: 412, revenue: 98400 },
-  { code: "STUDENT10", used: 245, revenue: 42100 },
-  { code: "WKND15", used: 86, revenue: 18200 },
-];
+const TOP_COUPONS: { code: string; used: number; revenue: number }[] = [];
 
-const REDEMPTION_TREND = [22, 31, 28, 42, 38, 51, 46, 58, 64, 71, 68, 82, 76, 88];
+const REDEMPTION_TREND: number[] = [];
 
 function statusClass(s: OfferStatus) {
   return s === "Active"
@@ -186,6 +172,13 @@ function OffersPage() {
               </tr>
             </thead>
             <tbody>
+              {OFFERS.length === 0 && (
+                <tr className="border-t border-border">
+                  <td colSpan={8} className="px-5 py-6 text-center text-muted-foreground">
+                    No offers yet. Create one to get started.
+                  </td>
+                </tr>
+              )}
               {OFFERS.map((o) => (
                 <tr key={o.id} className="border-t border-border hover:bg-muted/30">
                   <td className="px-5 py-3">
@@ -234,6 +227,9 @@ function OffersPage() {
             <Ticket className="h-4 w-4 text-brand-green" />
           </div>
           <div className="space-y-3">
+            {TOP_COUPONS.length === 0 && (
+              <p className="text-sm text-muted-foreground">No coupons redeemed yet.</p>
+            )}
             {TOP_COUPONS.map((c) => (
               <div key={c.code}>
                 <div className="mb-1 flex items-center justify-between text-xs">
@@ -257,6 +253,9 @@ function OffersPage() {
             <TrendingUp className="h-4 w-4 text-brand-green" />
           </div>
           <div className="flex h-40 items-end gap-1.5">
+            {REDEMPTION_TREND.length === 0 && (
+              <p className="text-sm text-muted-foreground">No redemptions yet.</p>
+            )}
             {REDEMPTION_TREND.map((v, i) => (
               <div key={i} className="flex-1 rounded-t-md bg-brand-green/80 transition-all hover:bg-brand-green"
                 style={{ height: `${(v / max) * 100}%` }} />

@@ -361,9 +361,15 @@ function BookingHistoryPage() {
             <input
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value);
+                setQuery(
+                  searchField === "mobile"
+                    ? e.target.value.replace(/\D/g, "").slice(0, 10)
+                    : e.target.value,
+                );
                 setPage(1);
               }}
+              inputMode={searchField === "mobile" ? "numeric" : undefined}
+              maxLength={searchField === "mobile" ? 10 : undefined}
               placeholder="Search by Booking ID, Passenger, Mobile or Ticket Number…"
               className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />

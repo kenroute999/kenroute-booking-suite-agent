@@ -10,6 +10,7 @@ import {
   listMyBookings,
   mailLink,
   myBookingsKey,
+  shortDate,
   whatsappLink,
   type MyBooking,
 } from "@/lib/api/booking";
@@ -247,7 +248,7 @@ function TicketsPage() {
 
   const stats = useMemo(() => {
     const active = TICKETS.filter((t) => t.status === "Active").length;
-    const today = TICKETS.filter((t) => t.date === "30 May 2026").length;
+    const today = TICKETS.filter((t) => t.date === shortDate(new Date().toISOString())).length;
     const cancelled = TICKETS.filter((t) => t.status === "Cancelled").length;
     const reprinted = TICKETS.filter((t) => t.status === "Reprinted").length;
     return { active, today, cancelled, reprinted };
@@ -429,7 +430,15 @@ function TicketsPage() {
 
           <input
             value={reprintQuery}
-            onChange={(e) => setReprintQuery(e.target.value)}
+            onChange={(e) =>
+              setReprintQuery(
+                reprintMode === "mobile"
+                  ? e.target.value.replace(/\D/g, "").slice(0, 10)
+                  : e.target.value,
+              )
+            }
+            inputMode={reprintMode === "mobile" ? "numeric" : undefined}
+            maxLength={reprintMode === "mobile" ? 10 : undefined}
             placeholder={reprintMode === "mobile" ? "+91 98xxx xxxxx" : "PNR8842xxx"}
             className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-brand-green/40"
           />

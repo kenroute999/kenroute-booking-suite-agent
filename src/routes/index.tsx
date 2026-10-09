@@ -613,7 +613,13 @@ function PassengerSearch({ bookings }: { bookings: MyBooking[] }) {
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) =>
+            setValue(
+              tab === "mobile" ? e.target.value.replace(/\D/g, "").slice(0, 10) : e.target.value,
+            )
+          }
+          inputMode={tab === "mobile" ? "numeric" : undefined}
+          maxLength={tab === "mobile" ? 10 : undefined}
           placeholder={tab === "mobile" ? "e.g. 9876543210" : "PNR, e.g. KRAB12CD"}
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
         />

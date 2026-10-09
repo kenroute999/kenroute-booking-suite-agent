@@ -229,9 +229,15 @@ function PassengersPage() {
                 <input
                   value={query}
                   onChange={(e) => {
-                    setQuery(e.target.value);
+                    setQuery(
+                      field === "mobile"
+                        ? e.target.value.replace(/\D/g, "").slice(0, 10)
+                        : e.target.value,
+                    );
                     setPage(1);
                   }}
+                  inputMode={field === "mobile" ? "numeric" : undefined}
+                  maxLength={field === "mobile" ? 10 : undefined}
                   placeholder="Search by name, mobile or passenger ID…"
                   className="h-10 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-green/40"
                 />

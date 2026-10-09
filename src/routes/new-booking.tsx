@@ -485,10 +485,27 @@ function NewBooking() {
                             <Field label="ID Proof Number">
                               <input
                                 value={p.idProofNumber}
-                                onChange={(e) => set({ idProofNumber: e.target.value })}
+                                onChange={(e) =>
+                                  set({
+                                    idProofNumber:
+                                      p.idProofType === "AADHAAR"
+                                        ? e.target.value.replace(/\D/g, "").slice(0, 12)
+                                        : e.target.value,
+                                  })
+                                }
                                 required
-                                pattern="[A-Za-z0-9 \-]{5,20}"
-                                title="5 to 20 letters or digits"
+                                inputMode={p.idProofType === "AADHAAR" ? "numeric" : undefined}
+                                maxLength={p.idProofType === "AADHAAR" ? 12 : 20}
+                                pattern={
+                                  p.idProofType === "AADHAAR"
+                                    ? "[0-9]{12}"
+                                    : "[A-Za-z0-9 \\-]{5,20}"
+                                }
+                                title={
+                                  p.idProofType === "AADHAAR"
+                                    ? "Enter a 12-digit Aadhaar number"
+                                    : "5 to 20 letters or digits"
+                                }
                                 className={inputClass}
                               />
                             </Field>
